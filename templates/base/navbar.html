@@ -1,0 +1,34 @@
+<nav class="navbar navbar-light bg-white shadow-sm app-navbar">
+
+    <div class="d-flex align-items-center gap-2 min-w-0">
+        <button
+            class="btn btn-outline-secondary sidebar-toggle"
+            type="button"
+            data-sidebar-toggle
+            aria-controls="app-sidebar"
+            aria-expanded="false"
+            aria-label="Abrir menu"
+        >
+            <i class="bi bi-list"></i>
+        </button>
+
+        <h5 class="mb-0">
+            Dashboard
+        </h5>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+
+        <span class="navbar-user text-truncate">
+            {{ request.user }}
+        </span>
+
+        <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">
+
+            Sair
+
+        </a>
+
+    </div>
+
+</nav>

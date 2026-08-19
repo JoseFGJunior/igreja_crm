@@ -1,0 +1,53 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h4 class="mb-1">Fechamento financeiro mensal</h4><span class="text-muted">{{ igreja.nome }}</span></div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4 no-print"><div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-4"><label class="form-label">Competência</label><select class="form-select" name="mes">{% for numero, nome in meses %}<option value="{{ numero }}" {% if numero == competencia.month %}selected{% endif %}>{{ nome }}</option>{% endfor %}</select></div>
+        <div class="col-md-3"><label class="form-label">Ano</label><select class="form-select" name="ano">{% for ano in anos %}<option value="{{ ano }}" {% if ano == competencia.year %}selected{% endif %}>{{ ano }}</option>{% endfor %}</select></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-primary">Ver fechamento</button></div>
+    </form>
+</div></div>
+
+<div class="card shadow-sm mb-4 fechamento-relatorio"><div class="card-body">
+    <div class="text-center border-bottom pb-3 mb-3"><h5 class="mb-1">IGREJA CRM</h5><h6 class="mb-1">FECHAMENTO FINANCEIRO MENSAL</h6><div>Competência: <strong>{{ competencia_display|upper }}</strong> · Status: <strong>{% if fechamento %}{{ fechamento.get_status_display|upper }}{% else %}ABERTO{% endif %}</strong></div></div>
+    <h6>Resumo financeiro</h6>
+    <table class="table table-sm"><tbody>
+        <tr><th>Saldo inicial <small class="text-muted">({{ origem_saldo_inicial|lower }})</small></th><td class="text-end">R$ {{ saldo_inicial|floatformat:2 }}</td></tr>
+        <tr><th>Total de receitas</th><td class="text-end text-success">R$ {{ total_receitas|floatformat:2 }}</td></tr>
+        <tr><th>Total disponível</th><td class="text-end">R$ {{ total_disponivel|floatformat:2 }}</td></tr>
+        <tr><th>Total de despesas</th><td class="text-end text-danger">R$ {{ total_despesas|floatformat:2 }}</td></tr>
+        <tr class="table-light"><th>SALDO FINAL</th><td class="text-end fw-bold {% if saldo_final < 0 %}text-danger{% else %}text-success{% endif %}">{% if saldo_final < 0 %}-R$ {{ saldo_final|slice:'1:'|floatformat:2 }}{% else %}R$ {{ saldo_final|floatformat:2 }}{% endif %}</td></tr>
+    </tbody></table>
+    {% if saldo_final < 0 %}<div class="alert alert-warning">Atenção: a competência apresenta saldo negativo.</div>{% endif %}
+
+    <h6 class="mt-4">Receitas</h6><div class="table-responsive"><table class="table table-sm"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="text-end">Valor</th></tr></thead><tbody>{% for item in receitas %}<tr><td>{{ item.data|date:'d/m/Y' }}</td><td>{{ item.descricao }}</td><td>{{ item.categoria.nome }}</td><td class="text-end">R$ {{ item.valor|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted">Nenhuma receita no período.</td></tr>{% endfor %}</tbody><tfoot><tr><th colspan="3">TOTAL DE RECEITAS</th><th class="text-end">R$ {{ total_receitas|floatformat:2 }}</th></tr></tfoot></table></div>
+    <h6 class="mt-4">Despesas</h6><div class="table-responsive"><table class="table table-sm"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="text-end">Valor</th></tr></thead><tbody>{% for item in despesas %}<tr><td>{{ item.data|date:'d/m/Y' }}</td><td>{{ item.descricao }}</td><td>{{ item.categoria.nome }}</td><td class="text-end">R$ {{ item.valor|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted">Nenhuma despesa no período.</td></tr>{% endfor %}</tbody><tfoot><tr><th colspan="3">TOTAL DE DESPESAS</th><th class="text-end">R$ {{ total_despesas|floatformat:2 }}</th></tr></tfoot></table></div>
+    <div class="border-top pt-3"><div class="row"><div class="col-8">Saldo inicial</div><div class="col-4 text-end">R$ {{ saldo_inicial|floatformat:2 }}</div><div class="col-8">(+) Receitas</div><div class="col-4 text-end">R$ {{ total_receitas|floatformat:2 }}</div><div class="col-8 fw-bold">(=) Total disponível</div><div class="col-4 text-end fw-bold">R$ {{ total_disponivel|floatformat:2 }}</div><div class="col-8">(-) Despesas</div><div class="col-4 text-end">R$ {{ total_despesas|floatformat:2 }}</div><div class="col-8 fw-bold">SALDO FINAL</div><div class="col-4 text-end fw-bold {% if saldo_final < 0 %}text-danger{% else %}text-success{% endif %}">{% if saldo_final < 0 %}-R$ {{ saldo_final|slice:'1:'|floatformat:2 }}{% else %}R$ {{ saldo_final|floatformat:2 }}{% endif %}</div></div></div>
+    {% if fechamento and fechamento.fechado_por %}<p class="mt-4 mb-0 text-muted small">Fechado por {{ fechamento.fechado_por }} em {{ fechamento.fechado_em|date:'d/m/Y H:i' }}.</p>{% endif %}
+</div></div>
+
+<div class="d-flex gap-2 no-print mb-4">
+{% if fechamento and fechamento.status == 'FECHADO' %}
+    {% if pode_reabrir %}<form method="post" action="{% url 'financeiro_fechamento_reabrir' fechamento.id %}">{% csrf_token %}<button class="btn btn-outline-warning" onclick="return confirm('Reabrir esta competência?')">Reabrir mês</button></form>{% endif %}
+{% else %}
+    {% if pode_fechar %}<form method="post" action="{% url 'financeiro_fechamento_confirmar' %}" class="d-flex gap-2">{% csrf_token %}<input type="hidden" name="ano" value="{{ competencia.year }}"><input type="hidden" name="mes" value="{{ competencia.month }}">{% if not fechamento and origem_saldo_inicial == 'IMPLANTACAO' %}<input required name="saldo_inicial" class="form-control" type="number" step="0.01" placeholder="Saldo inicial de implantação">{% endif %}<button class="btn btn-success" onclick="return confirm('Confirmar fechamento desta competência?')">Fechar mês</button></form>{% endif %}
+{% endif %}
+{% if fechamento and possui_posteriores_fechados and pode_fechar %}<form method="post" action="{% url 'financeiro_fechamento_reprocessar' fechamento.id %}">{% csrf_token %}<button class="btn btn-outline-primary" onclick="return confirm('Recalcular os saldos posteriores fechados?')">Reprocessar posteriores</button></form>{% endif %}
+{% if fechamento and fechamento.status == 'ABERTO' and origem_saldo_inicial == 'IMPLANTACAO' and pode_configurar_saldo %}<form method="post" action="{% url 'financeiro_fechamento_configurar_saldo_inicial' fechamento.id %}" class="d-flex gap-2">{% csrf_token %}<input required name="saldo_inicial" class="form-control" type="number" step="0.01" value="{{ saldo_inicial }}" aria-label="Saldo inicial de implantação"><button class="btn btn-outline-secondary" onclick="return confirm('Atualizar o saldo inicial de implantação?')">Atualizar saldo inicial</button></form>{% endif %}
+</div>
+{% if not pode_fechar %}
+<div class="alert alert-info no-print">Seu usuário pode consultar o fechamento, mas não possui permissão para configurar o saldo inicial ou fechar o mês. Peça a um administrador para conceder as permissões financeiras necessárias.</div>
+{% endif %}
+
+<div class="card shadow-sm no-print"><div class="card-body"><h5>Histórico de fechamentos</h5><div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Competência</th><th class="text-end">Saldo inicial</th><th class="text-end">Receitas</th><th class="text-end">Despesas</th><th class="text-end">Saldo final</th><th>Status</th></tr></thead><tbody>{% for item in historico_fechamentos %}<tr><td><a href="{% url 'financeiro_fechamento_mensal' %}?ano={{ item.competencia.year }}&mes={{ item.competencia.month }}">{{ item.competencia|date:'m/Y' }}</a></td><td class="text-end">R$ {{ item.saldo_inicial|floatformat:2 }}</td><td class="text-end">R$ {{ item.total_receitas|floatformat:2 }}</td><td class="text-end">R$ {{ item.total_despesas|floatformat:2 }}</td><td class="text-end {% if item.saldo_final < 0 %}text-danger{% endif %}">{% if item.saldo_final < 0 %}-R$ {{ item.saldo_final|slice:'1:'|floatformat:2 }}{% else %}R$ {{ item.saldo_final|floatformat:2 }}{% endif %}</td><td>{{ item.get_status_display }}</td></tr>{% empty %}<tr><td colspan="6" class="text-center text-muted">Nenhum fechamento registrado.</td></tr>{% endfor %}</tbody></table></div></div></div>
+{% endblock %}
+
+{% block scripts %}<style>@media print {.sidebar,.navbar,.no-print,.alert{display:none!important}.main-content{margin:0!important}.main-container{padding:0!important}.fechamento-relatorio{box-shadow:none!important;border:0!important}}</style>{% endblock %}

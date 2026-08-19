@@ -1,0 +1,81 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h4 class="mb-1">
+            Categorias de saida
+        </h4>
+
+        <span class="text-muted">
+            {{ igreja.nome }}
+        </span>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a href="{% url 'financeiro_conta_pagar_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Contas a pagar
+        </a>
+
+        <a href="{% url 'financeiro_categoria_saida_create' %}" class="btn btn-danger">
+            <i class="bi bi-plus-lg"></i>
+            Nova categoria
+        </a>
+    </div>
+
+</div>
+
+<div class="card shadow-sm">
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Ativa</th>
+                    <th class="text-end">Acoes</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for categoria in categorias %}
+
+                    <tr>
+                        <td>{{ categoria.nome }}</td>
+                        <td>{% if categoria.ativa %}Sim{% else %}Nao{% endif %}</td>
+                        <td class="text-end">
+                            <a
+                                href="{% url 'financeiro_categoria_saida_update' categoria.id %}"
+                                class="btn btn-outline-secondary btn-sm"
+                                title="Editar"
+                            >
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            Nenhuma categoria de saida cadastrada.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

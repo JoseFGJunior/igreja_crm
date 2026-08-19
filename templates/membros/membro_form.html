@@ -1,0 +1,215 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h4 class="mb-1">
+            {{ titulo }}
+        </h4>
+
+        <span class="text-muted">
+            {{ igreja.nome }}
+        </span>
+    </div>
+
+    <a href="{% url 'membro_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i>
+        Voltar
+    </a>
+
+</div>
+
+<div class="card shadow-sm">
+
+    <div class="card-body">
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button
+                        class="nav-link active"
+                        data-bs-toggle="tab"
+                        data-bs-target="#dados-membro"
+                        type="button"
+                    >
+                        Dados do membro
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button
+                        class="nav-link"
+                        data-bs-toggle="tab"
+                        data-bs-target="#cuidado-pastoral"
+                        type="button"
+                    >
+                        Cuidado pastoral
+                        {% if form.instance.necessita_cuidado_especial %}
+                            <span class="badge text-bg-warning ms-1">Alerta</span>
+                        {% endif %}
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div class="tab-pane fade show active" id="dados-membro">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-8">
+                            <label class="form-label">Nome</label>
+                            {{ form.nome }}
+                            {{ form.nome.errors }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Status</label>
+                            {{ form.status }}
+                            {{ form.status.errors }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            {{ form.email }}
+                            {{ form.email.errors }}
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Telefone</label>
+                            {{ form.telefone }}
+                            {{ form.telefone.errors }}
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Data nascimento</label>
+                            {{ form.data_nascimento }}
+                            {{ form.data_nascimento.errors }}
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label">Endereco</label>
+                            {{ form.endereco }}
+                            {{ form.endereco.errors }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Bairro</label>
+                            {{ form.bairro }}
+                            {{ form.bairro.errors }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Cidade</label>
+                            {{ form.cidade }}
+                            {{ form.cidade.errors }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Cargo</label>
+                            {{ form.cargo }}
+                            {{ form.cargo.errors }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Data batismo</label>
+                            {{ form.data_batismo }}
+                            {{ form.data_batismo.errors }}
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.batizado }}
+                                <label class="form-check-label">
+                                    Batizado
+                                </label>
+                            </div>
+                            {{ form.batizado.errors }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="tab-pane fade" id="cuidado-pastoral">
+
+                    <div class="alert alert-warning">
+                        Use esta area para sinalizar membros que precisam de acompanhamento, visita ou apoio da igreja.
+                    </div>
+
+                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.necessita_cuidado_especial }}
+                                <label class="form-check-label">
+                                    Necessita cuidado especial
+                                </label>
+                            </div>
+                            {{ form.necessita_cuidado_especial.errors }}
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label">Tipo de cuidado</label>
+                            <div class="row g-2">
+                                {% for checkbox in form.tipo_cuidado_especial %}
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            {{ checkbox.tag }}
+                                            <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                                {{ checkbox.choice_label }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {{ form.tipo_cuidado_especial.errors }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Prioridade</label>
+                            {{ form.prioridade_cuidado }}
+                            {{ form.prioridade_cuidado.errors }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Responsavel pelo acompanhamento</label>
+                            {{ form.responsavel_cuidado }}
+                            {{ form.responsavel_cuidado.errors }}
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Observacao pastoral</label>
+                            {{ form.observacao_cuidado_especial }}
+                            {{ form.observacao_cuidado_especial.errors }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{% url 'membro_list' %}" class="btn btn-outline-secondary">
+                    Cancelar
+                </a>
+
+                <button class="btn btn-primary">
+                    <i class="bi bi-check-lg"></i>
+                    Salvar
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

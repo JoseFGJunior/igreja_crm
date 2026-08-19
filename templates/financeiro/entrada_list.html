@@ -1,0 +1,152 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h4 class="mb-1">
+            Entradas
+        </h4>
+
+        <span class="text-muted">
+            {{ igreja.nome }}
+        </span>
+    </div>
+
+    <div class="page-actions d-flex gap-2">
+        <a href="{% url 'financeiro_categoria_entrada_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-tags"></i>
+            Categorias
+        </a>
+
+        <a href="{% url 'financeiro_entrada_create' %}" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i>
+            Nova entrada
+        </a>
+    </div>
+
+</div>
+
+<div class="row g-3 mb-4">
+
+    <div class="col-md-4">
+
+        <div class="card card-dashboard shadow-sm">
+
+            <div class="card-body">
+
+                <h6>
+                    Total filtrado
+                </h6>
+
+                <h2 class="text-success">
+                    R$ {{ total_entradas|floatformat:2 }}
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="card shadow-sm mb-4">
+
+    <div class="card-body">
+
+        <form method="get" class="row g-2">
+
+            <div class="col-md-10">
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ pesquisa }}"
+                    class="form-control"
+                    placeholder="Pesquisar por descricao"
+                >
+            </div>
+
+            <div class="col-md-2 d-grid">
+                <button class="btn btn-outline-success">
+                    <i class="bi bi-search"></i>
+                    Pesquisar
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<div class="card shadow-sm">
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Descricao</th>
+                    <th>Categoria</th>
+                    <th>Membro</th>
+                    <th>Forma</th>
+                    <th class="text-end">Valor</th>
+                    <th class="text-end">Acoes</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for entrada in entradas %}
+
+                    <tr>
+                        <td>{{ entrada.data|date:"d/m/Y" }}</td>
+                        <td>{{ entrada.descricao }}</td>
+                        <td>{{ entrada.categoria.nome }}</td>
+                        <td>{{ entrada.membro.nome|default:"-" }}</td>
+                        <td>{{ entrada.get_forma_pagamento_display }}</td>
+                        <td class="text-end text-success">
+                            R$ {{ entrada.valor|floatformat:2 }}
+                        </td>
+                        <td class="text-end">
+                            <a
+                                href="{% url 'financeiro_entrada_update' entrada.id %}"
+                                class="btn btn-outline-secondary btn-sm"
+                                title="Editar"
+                            >
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <a
+                                href="{% url 'financeiro_entrada_delete' entrada.id %}"
+                                class="btn btn-outline-danger btn-sm"
+                                title="Excluir"
+                            >
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Nenhuma entrada encontrada.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

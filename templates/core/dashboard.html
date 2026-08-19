@@ -1,0 +1,372 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+
+<div class="row mb-4">
+
+    <div class="col-md-6 col-lg-4">
+
+        <form
+            method="post"
+            action="{% url 'selecionar_igreja' %}"
+        >
+
+            {% csrf_token %}
+
+            <label class="form-label">
+                Igreja/Congregação
+            </label>
+
+            <select
+                name="igreja_id"
+                class="form-select"
+                onchange="this.form.submit()"
+            >
+
+                {% for usuario_igreja in igrejas_usuario %}
+
+                    <option
+                        value="{{ usuario_igreja.igreja.id }}"
+                        {% if igreja_selecionada and usuario_igreja.igreja.id == igreja_selecionada.igreja.id %}selected{% endif %}
+                    >
+                        {{ usuario_igreja.igreja.nome }}
+                    </option>
+
+                {% empty %}
+
+                    <option>
+                        Nenhuma empresa disponivel
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </form>
+
+    </div>
+
+</div>
+
+<div class="row g-3 mb-4">
+
+    <div class="col-md-3">
+
+        <div class="card card-dashboard shadow-sm">
+
+            <div class="card-body">
+
+                <h6>
+                    Membros
+                </h6>
+
+                <h2>
+                    {{ total_membros }}
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-3">
+
+        <div class="card card-dashboard shadow-sm">
+
+            <div class="card-body">
+
+                <h6>
+                    Congregados
+                </h6>
+
+                <h2>
+                    {{ total_congregados }}
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-3">
+
+        <div class="card card-dashboard shadow-sm">
+
+            <div class="card-body">
+
+                <h6>
+                    Visitantes
+                </h6>
+
+                <h2>
+                    {{ total_visitantes }}
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="card shadow-sm mb-4">
+
+    <div class="card-body">
+
+        <div class="dashboard-card-header d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">
+                Membros por faixa etaria
+            </h5>
+
+            <div class="dashboard-actions d-flex gap-2">
+                <a
+                    href="{% url 'exportar_faixa_etaria_excel' %}"
+                    class="btn btn-outline-success btn-sm"
+                >
+                    <i class="bi bi-file-earmark-excel"></i>
+                    Exportar faixas
+                </a>
+
+                <a
+                    href="{% url 'exportar_visitantes_excel' %}"
+                    class="btn btn-outline-primary btn-sm"
+                >
+                    <i class="bi bi-file-earmark-excel"></i>
+                    Exportar visitantes
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4 align-items-center">
+
+            <div class="col-lg-5">
+                <div style="height: 320px;">
+                    <canvas id="graficoFaixaEtaria"></canvas>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead>
+                            <tr>
+                                <th>Grupo</th>
+                                <th>Faixa</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for faixa in resumo_faixa_etaria %}
+
+                                <tr>
+                                    <td>{{ faixa.nome }}</td>
+                                    <td>{{ faixa.idade }}</td>
+                                    <td class="text-end">
+                                        <strong>{{ faixa.total }}</strong>
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+
+                            <tr>
+                                <td>Outras faixas</td>
+                                <td>36 a 39 anos e 56 a 64 anos</td>
+                                <td class="text-end">
+                                    <strong>{{ outras_faixas_etarias }}</strong>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Sem data de nascimento</td>
+                                <td>Cadastro incompleto</td>
+                                <td class="text-end">
+                                    <strong>{{ sem_data_nascimento }}</strong>
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {{ grafico_faixa_etaria_labels|json_script:"grafico-faixa-etaria-labels" }}
+        {{ grafico_faixa_etaria_totais|json_script:"grafico-faixa-etaria-totais" }}
+
+    </div>
+
+</div>
+
+<div class="row g-3">
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h5 class="mb-3">
+                    Aniversariantes do mes
+                </h5>
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                                <th>Telefone</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for membro in aniversariantes_mes %}
+
+                                <tr>
+                                    <td>{{ membro.nome }}</td>
+                                    <td>{{ membro.get_status_display }}</td>
+                                    <td>{{ membro.data_nascimento|date:"d/m" }}</td>
+                                    <td>{{ membro.telefone|default:"-" }}</td>
+                                </tr>
+
+                            {% empty %}
+
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        Nenhum aniversariante neste mes.
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h5 class="mb-3">
+                    Aniversariantes da semana
+                </h5>
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                                <th>Telefone</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for membro in aniversariantes_semana %}
+
+                                <tr>
+                                    <td>{{ membro.nome }}</td>
+                                    <td>{{ membro.get_status_display }}</td>
+                                    <td>{{ membro.data_nascimento|date:"d/m" }}</td>
+                                    <td>{{ membro.telefone|default:"-" }}</td>
+                                </tr>
+
+                            {% empty %}
+
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        Nenhum aniversariante nesta semana.
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+    const faixaEtariaLabels = JSON.parse(
+        document.getElementById('grafico-faixa-etaria-labels').textContent
+    );
+    const faixaEtariaTotais = JSON.parse(
+        document.getElementById('grafico-faixa-etaria-totais').textContent
+    );
+    const graficoFaixaEtaria = document.getElementById('graficoFaixaEtaria');
+
+    if (graficoFaixaEtaria && faixaEtariaLabels.length) {
+        new Chart(graficoFaixaEtaria, {
+            type: 'pie',
+            data: {
+                labels: faixaEtariaLabels,
+                datasets: [{
+                    data: faixaEtariaTotais,
+                    backgroundColor: [
+                        '#0d6efd',
+                        '#20c997',
+                        '#ffc107',
+                        '#dc3545',
+                        '#6f42c1',
+                        '#198754',
+                        '#6c757d',
+                        '#adb5bd'
+                    ],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                },
+            },
+        });
+    }
+</script>
+{% endblock %}

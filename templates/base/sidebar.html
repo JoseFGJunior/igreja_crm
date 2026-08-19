@@ -1,0 +1,91 @@
+<aside id="app-sidebar" class="sidebar bg-dark text-white p-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">
+            Crm Igreja
+        </h4>
+
+        <button
+            class="btn btn-sm btn-outline-light sidebar-close"
+            type="button"
+            data-sidebar-close
+            aria-label="Fechar menu"
+        >
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
+    <ul class="nav flex-column">
+
+        <li class="nav-item mb-2">
+            <a href="{% url 'dashboard' %}" class="nav-link text-white">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+        </li>
+
+        <li class="nav-item mb-2">
+            <a href="{% url 'membro_list' %}" class="nav-link text-white">
+                <i class="bi bi-people"></i>
+                Membros
+            </a>
+        </li>
+
+        <li class="nav-item mb-2">
+            <a href="#" class="nav-link text-white">
+                <i class="bi bi-calendar-event"></i>
+                Eventos
+            </a>
+        </li>
+
+        <li class="nav-item mt-3 mb-2">
+            <span class="nav-link text-white-50">
+                <i class="bi bi-cash-stack"></i>
+                Financeiro
+            </span>
+        </li>
+
+        {% if plano_completo_ativo %}
+
+            <li class="nav-item mb-2">
+                <a href="{% url 'financeiro_dashboard' %}" class="nav-link text-white ps-4">
+                    <i class="bi bi-graph-up"></i>
+                    Dashboard
+                </a>
+            </li>
+
+            <li class="nav-item mb-2">
+                <a href="{% url 'financeiro_entrada_list' %}" class="nav-link text-white ps-4">
+                    <i class="bi bi-arrow-down-circle"></i>
+                    Entradas
+                </a>
+            </li>
+
+            <li class="nav-item mb-2">
+                <a href="{% url 'financeiro_conta_pagar_list' %}" class="nav-link text-white ps-4">
+                    <i class="bi bi-arrow-up-circle"></i>
+                    Contas a pagar
+                </a>
+            </li>
+
+            <li class="nav-item mb-2">
+                <a href="{% url 'financeiro_fechamento_mensal' %}" class="nav-link text-white ps-4">
+                    <i class="bi bi-calendar-check"></i>
+                    Fechamento mensal
+                </a>
+            </li>
+
+        {% else %}
+
+            <li class="nav-item mb-2">
+                <a href="{% url 'financeiro_dashboard' %}" class="nav-link text-white ps-4">
+                    <i class="bi bi-lock"></i>
+                    Plano completo
+                </a>
+            </li>
+
+        {% endif %}
+
+    </ul>
+
+</aside>

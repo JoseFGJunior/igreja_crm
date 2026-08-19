@@ -1,0 +1,55 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+
+    <div class="col-lg-8">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <i class="bi bi-lock fs-2 text-warning"></i>
+
+                    <div>
+                        <h4 class="mb-1">
+                            Modulo financeiro bloqueado
+                        </h4>
+
+                        <span class="text-muted">
+                            {{ igreja.nome }}
+                        </span>
+                    </div>
+                </div>
+
+                <p class="mb-3">
+                    O modulo financeiro faz parte do plano completo do Parceiros em Missao.
+                </p>
+
+                <div class="alert alert-light border mb-4">
+                    <strong>Plano gratuito:</strong> cadastro de membros.
+                    <br>
+                    <strong>Plano completo:</strong> membros, entradas financeiras, contas a pagar e dashboard financeiro.
+                </div>
+
+                <p class="mb-4">
+                    Para liberar o modulo financeiro desta igreja, entre em contato com o suporte do Parceiros em Missao e solicite a ativação do plano
+                    <strong>Completo</strong> no admin do sistema.
+                </p>
+
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                    <i class="bi bi-arrow-left"></i>
+                    Voltar ao dashboard
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

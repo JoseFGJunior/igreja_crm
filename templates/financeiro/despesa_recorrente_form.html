@@ -1,0 +1,96 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">Nova despesa recorrente ou parcelada</h4>
+        <span class="text-muted">{{ igreja.nome }}</span>
+    </div>
+
+    <a href="{% url 'financeiro_conta_pagar_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i>
+        Voltar
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <p class="text-muted">
+            O sistema criara uma conta por mes. Para uma TV em 10 vezes de
+            R$ 100,00, informe valor da parcela R$ 100,00 e quantidade 10.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Tipo</label>
+                    {{ form.tipo_geracao }}
+                    {{ form.tipo_geracao.errors }}
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Primeiro vencimento</label>
+                    {{ form.data_primeiro_vencimento }}
+                    {{ form.data_primeiro_vencimento.errors }}
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Quantidade de meses/parcelas</label>
+                    {{ form.quantidade }}
+                    {{ form.quantidade.errors }}
+                    <div class="form-text">{{ form.quantidade.help_text }}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Categoria</label>
+                    {{ form.categoria }}
+                    {{ form.categoria.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Forma de pagamento</label>
+                    {{ form.forma_pagamento }}
+                    {{ form.forma_pagamento.errors }}
+                </div>
+
+                <div class="col-md-8">
+                    <label class="form-label">Descricao</label>
+                    {{ form.descricao }}
+                    {{ form.descricao.errors }}
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Valor de cada parcela/mes</label>
+                    {{ form.valor_parcela }}
+                    {{ form.valor_parcela.errors }}
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Observacao</label>
+                    {{ form.observacao }}
+                    {{ form.observacao.errors }}
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{% url 'financeiro_conta_pagar_list' %}" class="btn btn-outline-secondary">
+                    Cancelar
+                </a>
+
+                <button class="btn btn-danger">
+                    <i class="bi bi-check-lg"></i>
+                    Gerar despesas
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

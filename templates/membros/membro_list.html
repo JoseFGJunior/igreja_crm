@@ -1,0 +1,131 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h4 class="mb-1">
+            Membros
+        </h4>
+
+        <span class="text-muted">
+            {{ igreja.nome }}
+        </span>
+    </div>
+
+    <a href="{% url 'membro_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i>
+        Novo membro
+    </a>
+
+</div>
+
+<div class="card shadow-sm mb-4">
+
+    <div class="card-body">
+
+        <form method="get" class="row g-2">
+
+            <div class="col-md-10">
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ pesquisa }}"
+                    class="form-control"
+                    placeholder="Pesquisar por nome"
+                >
+            </div>
+
+            <div class="col-md-2 d-grid">
+                <button class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i>
+                    Pesquisar
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<div class="card shadow-sm">
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Status</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Cidade</th>
+                    <th>Cuidado pastoral</th>
+                    <th class="text-end">Acoes</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for membro in membros %}
+
+                    <tr>
+                        <td>{{ membro.nome }}</td>
+                        <td>{{ membro.get_status_display }}</td>
+                        <td>{{ membro.telefone|default:"-" }}</td>
+                        <td>{{ membro.email|default:"-" }}</td>
+                        <td>{{ membro.cidade|default:"-" }}</td>
+                        <td>
+                            {% if membro.necessita_cuidado_especial %}
+                                <span class="badge text-bg-warning">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    {{ membro.get_prioridade_cuidado_display|default:"Alerta" }}
+                                </span>
+                                <div class="small text-muted mt-1">
+                                    {{ membro.get_tipos_cuidado_especial_display }}
+                                </div>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a
+                                href="{% url 'membro_update' membro.id %}"
+                                class="btn btn-outline-secondary btn-sm"
+                                title="Editar"
+                            >
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <a
+                                href="{% url 'membro_delete' membro.id %}"
+                                class="btn btn-outline-danger btn-sm"
+                                title="Excluir"
+                            >
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Nenhum membro encontrado.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

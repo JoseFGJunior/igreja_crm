@@ -1,0 +1,69 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h4 class="mb-1">
+            {{ titulo }}
+        </h4>
+
+        <span class="text-muted">
+            {{ igreja.nome }}
+        </span>
+    </div>
+
+    <a href="{% url 'financeiro_categoria_entrada_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i>
+        Voltar
+    </a>
+
+</div>
+
+<div class="card shadow-sm">
+
+    <div class="card-body">
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <div class="row g-3">
+
+                <div class="col-md-8">
+                    <label class="form-label">Nome</label>
+                    {{ form.nome }}
+                    {{ form.nome.errors }}
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        {{ form.ativa }}
+                        <label class="form-check-label">
+                            Ativa
+                        </label>
+                    </div>
+                    {{ form.ativa.errors }}
+                </div>
+
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="{% url 'financeiro_categoria_entrada_list' %}" class="btn btn-outline-secondary">
+                    Cancelar
+                </a>
+
+                <button class="btn btn-success">
+                    <i class="bi bi-check-lg"></i>
+                    Salvar
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
