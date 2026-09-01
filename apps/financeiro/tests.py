@@ -254,3 +254,60 @@ class FinanceiroTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         fechamento.refresh_from_db()
         self.assertEqual(fechamento.saldo_inicial, Decimal('0.00'))
+
+    def test_contas_a_pagar_aplica_filtros_combinados_e_total_filtrado(self):
+        categoria_energia = CategoriaFinanceira.objects.create(
+            igreja=self.igreja,
+            nome='Energia',
+            tipo=CategoriaFinanceira.TIPO_SAIDA,
+        )
+        conta_incluida = LancamentoFinanceiro.objects.create(
+            igreja=self.igreja, categoria=categoria_energia,
+            tipo=LancamentoFinanceiro.TIPO_SAIDA, descricao='Energia setembro',
+            valor=Decimal('650.00'), data=date(2026, 9, 10),
+            data_pagamento=date(2026, 9, 15),
+            forma_pagamento=LancamentoFinanceiro.FORMA_PIX,
+        )
+        conta_excluida = LancamentoFinanceiro.objects.create(
+            igreja=self.igreja, categoria=self.categoria,
+            tipo=LancamentoFinanceiro.TIPO_SAIDA, descricao='Aluguel',
+            valor=Decimal('300.00'), data=date(2026, 9, 12),
+            data_pagamento=None,
+            forma_pagamento=LancamentoFinanceiro.FORMA_DINHEIRO,
+        )
+        response = self.client.get(
+            reverse('financeiro_conta_pagar_list'),
+            {
+                'vencimento_inicio': '2026-09-01',
+                'vencimento_fim': '2026-09-30',
+                'pagamento_inicio': '2026-09-01',
+                'pagamento_fim': '2026-09-30',
+                'forma_pagamento': LancamentoFinanceiro.FORMA_PIX,
+                'categoria': categoria_energia.id,
+                'q': 'setembro',
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['contas']), [conta_incluida])
+        self.assertEqual(response.context['total_contas'], Decimal('650.00'))
+        self.assertNotContains(response, conta_excluida.descricao)
+
+    def test_contas_a_pagar_aceita_intervalos_abertos(self):
+        conta_futura = LancamentoFinanceiro.objects.create(
+            igreja=self.igreja, categoria=self.categoria,
+            tipo=LancamentoFinanceiro.TIPO_SAIDA, descricao='Conta futura',
+            valor=Decimal('100.00'), data=date(2026, 10, 1),
+            data_pagamento=date(2026, 10, 5),
+        )
+        conta_sem_pagamento = LancamentoFinanceiro.objects.create(
+            igreja=self.igreja, categoria=self.categoria,
+            tipo=LancamentoFinanceiro.TIPO_SAIDA, descricao='Conta pendente',
+            valor=Decimal('200.00'), data=date(2026, 8, 1),
+        )
+        response = self.client.get(
+            reverse('financeiro_conta_pagar_list'),
+            {'vencimento_inicio': '2026-09-01'},
+        )
+        self.assertIn(conta_futura, response.context['contas'])
+        self.assertNotIn(conta_sem_pagamento, response.context['contas'])
+

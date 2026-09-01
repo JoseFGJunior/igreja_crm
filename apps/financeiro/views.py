@@ -1,6 +1,7 @@
 import calendar
 import uuid
 from datetime import date
+from datetime import datetime
 from decimal import Decimal
 from io import BytesIO
 from string import ascii_uppercase
@@ -877,6 +878,13 @@ def categoria_entrada_delete_view(request, pk):
     )
 
 
+def _parse_query_date(value):
+    try:
+        return datetime.strptime((value or '').strip(), '%Y-%m-%d').date()
+    except (TypeError, ValueError):
+        return None
+
+
 @login_required
 @plano_financeiro_required
 def conta_pagar_list_view(request):
@@ -886,6 +894,12 @@ def conta_pagar_list_view(request):
         return redirect('dashboard')
 
     pesquisa = request.GET.get('q', '').strip()
+    vencimento_inicio = _parse_query_date(request.GET.get('vencimento_inicio'))
+    vencimento_fim = _parse_query_date(request.GET.get('vencimento_fim'))
+    pagamento_inicio = _parse_query_date(request.GET.get('pagamento_inicio'))
+    pagamento_fim = _parse_query_date(request.GET.get('pagamento_fim'))
+    forma_pagamento = request.GET.get('forma_pagamento', '').strip()
+    categoria_id = request.GET.get('categoria', '').strip()
     contas = LancamentoFinanceiro.objects.select_related(
         'categoria'
     ).filter(
@@ -896,6 +910,22 @@ def conta_pagar_list_view(request):
     if pesquisa:
         contas = contas.filter(
             descricao__icontains=pesquisa
+        )
+    if vencimento_inicio:
+        contas = contas.filter(data__gte=vencimento_inicio)
+    if vencimento_fim:
+        contas = contas.filter(data__lte=vencimento_fim)
+    if pagamento_inicio:
+        contas = contas.filter(data_pagamento__gte=pagamento_inicio)
+    if pagamento_fim:
+        contas = contas.filter(data_pagamento__lte=pagamento_fim)
+    if forma_pagamento in dict(LancamentoFinanceiro.FORMA_PAGAMENTO_CHOICES):
+        contas = contas.filter(forma_pagamento=forma_pagamento)
+    if categoria_id.isdigit():
+        contas = contas.filter(
+            categoria_id=categoria_id,
+            categoria__igreja=igreja,
+            categoria__tipo=CategoriaFinanceira.TIPO_SAIDA,
         )
 
     total_contas = contas.aggregate(
@@ -910,6 +940,19 @@ def conta_pagar_list_view(request):
             'contas': contas,
             'pesquisa': pesquisa,
             'total_contas': total_contas,
+            'categorias': CategoriaFinanceira.objects.filter(
+                igreja=igreja,
+                tipo=CategoriaFinanceira.TIPO_SAIDA,
+            ).order_by('nome'),
+            'formas_pagamento': LancamentoFinanceiro.FORMA_PAGAMENTO_CHOICES,
+            'filtros': {
+                'vencimento_inicio': request.GET.get('vencimento_inicio', ''),
+                'vencimento_fim': request.GET.get('vencimento_fim', ''),
+                'pagamento_inicio': request.GET.get('pagamento_inicio', ''),
+                'pagamento_fim': request.GET.get('pagamento_fim', ''),
+                'forma_pagamento': forma_pagamento,
+                'categoria': categoria_id,
+            },
         }
     )
 
@@ -1218,3 +1261,4 @@ def categoria_saida_delete_view(request, pk):
         'financeiro/categoria_saida_confirm_delete.html',
         {'igreja': igreja, 'categoria': categoria}
     )
+
