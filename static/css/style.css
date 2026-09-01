@@ -8,6 +8,47 @@ body {
     flex: 0 0 260px;
 }
 
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #fff;
+    min-width: 0;
+}
+
+.sidebar-brand-mark {
+    width: 40px;
+    height: 35px;
+    display: grid;
+    place-items: center;
+    border: 4px solid #56b56b;
+    border-left-color: #058ac2;
+    border-radius: 50%;
+    transform: rotate(-10deg);
+    flex: 0 0 auto;
+}
+
+.sidebar-brand-mark i {
+    color: #70c77e;
+    font-size: 19px;
+}
+
+.sidebar-brand strong {
+    display: block;
+    font-size: 16px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.sidebar-brand small {
+    display: block;
+    color: #70c77e;
+    letter-spacing: .12em;
+    font-size: 6px;
+    font-weight: 700;
+    margin-top: 5px;
+    white-space: nowrap;
+}
 .main-content {
     min-height: 100vh;
     min-width: 0;
@@ -28,6 +69,11 @@ body {
 
 .navbar-user {
     max-width: 220px;
+}
+
+.change-password-form input {
+    display: block;
+    width: 100%;
 }
 
 .card-dashboard {

@@ -101,13 +101,13 @@
             </h5>
 
             <div class="d-flex align-items-center gap-2">
-                <a
+                {% if perms.financeiro.view_lancamentofinanceiro %}<a
                     href="{% url 'financeiro_resumo_anual_excel' %}?ano={{ ano_selecionado }}"
                     class="btn btn-outline-success btn-sm"
                 >
                     <i class="bi bi-file-earmark-excel"></i>
                     Exportar Excel
-                </a>
+                </a>{% endif %}
             </div>
         </div>
 

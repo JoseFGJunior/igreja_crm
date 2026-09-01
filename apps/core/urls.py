@@ -1,19 +1,17 @@
 from django.urls import path
+from django.views.generic import RedirectView
 
 from .views import dashboard_view
 from .views import exportar_faixa_etaria_excel_view
 from .views import exportar_visitantes_excel_view
 from .views import home_view
 from .views import selecionar_igreja_view
+from .views import aniversario_mensagem_view
 
 
 urlpatterns = [
 
-    path(
-        '',
-        home_view,
-        name='home'
-    ),
+    path('', RedirectView.as_view(pattern_name='login', permanent=False), name='home'),
 
     path(
         'dashboard/',
@@ -25,6 +23,12 @@ urlpatterns = [
         'selecionar-igreja/',
         selecionar_igreja_view,
         name='selecionar_igreja'
+    ),
+
+    path(
+        'dashboard/aniversariantes/mensagem/',
+        aniversario_mensagem_view,
+        name='aniversario_mensagem'
     ),
 
     path(

@@ -1,0 +1,18 @@
+{% extends 'base/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h4 class="mb-1">Mensagem de aniversário</h4><span class="text-muted">{{ igreja.nome }}</span></div>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Voltar</a>
+</div>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="alert alert-info">Use <code>{nome}</code> para inserir o nome do aniversariante. O nome da igreja será acrescentado automaticamente ao final.</div>
+        <form method="post">{% csrf_token %}
+            <div class="mb-3"><label class="form-label">{{ form.texto.label }}</label>{{ form.texto }}{{ form.texto.errors }}</div>
+            <div class="mb-3"><label class="form-label">{{ form.versiculo.label }}</label>{{ form.versiculo }}{{ form.versiculo.errors }}</div>
+            <div class="form-check mb-4">{{ form.ativa }}<label class="form-check-label">{{ form.ativa.label }}</label></div>
+            <div class="text-end"><button class="btn btn-primary">Salvar mensagem</button></div>
+        </form>
+    </div>
+</div>
+{% endblock %}

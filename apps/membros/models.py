@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from apps.core.models import TenantModel
 
 
@@ -41,6 +43,15 @@ class Membro(TenantModel):
         (PRIORIDADE_URGENTE, 'Urgente'),
     ]
 
+    STATUS_VISITANTE_CHOICES = [
+        ('NOVO', 'Novo'),
+        ('ACOMPANHAMENTO', 'Em acompanhamento'),
+        ('RETORNOU', 'Retornou'),
+        ('FREQUENTE', 'Frequente'),
+        ('INTEGRADO', 'Integrado'),
+        ('SEM_RETORNO', 'Sem retorno'),
+    ]
+
     nome = models.CharField(
         max_length=200
     )
@@ -54,6 +65,42 @@ class Membro(TenantModel):
         max_length=20,
         blank=True,
         null=True
+    )
+
+    whatsapp = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True
+    )
+
+    data_primeira_visita = models.DateField(
+        blank=True,
+        null=True
+    )
+
+    origem_visitante = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True
+    )
+
+    observacao_visitante = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    status_visitante = models.CharField(
+        max_length=30,
+        choices=STATUS_VISITANTE_CHOICES,
+        default='NOVO'
+    )
+
+    responsavel_visitante = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='visitantes_responsaveis'
     )
 
     data_nascimento = models.DateField(
@@ -158,3 +205,83 @@ class Membro(TenantModel):
             return '-'
 
         return ', '.join(tipos)
+
+
+class VisitaVisitante(TenantModel):
+
+    visitante = models.ForeignKey(
+        Membro,
+        on_delete=models.CASCADE,
+        related_name='visitas_visitante'
+    )
+
+    data_visita = models.DateField()
+    observacao = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ('data_visita', 'id')
+
+
+class AcompanhamentoVisitante(TenantModel):
+
+    TIPO_CHOICES = [
+        ('24H', 'Contato de 24 horas'),
+        ('7D', 'Contato de 7 dias'),
+        ('15D', 'Contato de 15 dias'),
+        ('RETORNO', 'Nova tentativa'),
+    ]
+
+    STATUS_CHOICES = [
+        ('PENDENTE', 'Pendente'),
+        ('CONCLUIDO', 'Concluído'),
+        ('CANCELADO', 'Cancelado'),
+    ]
+
+    visitante = models.ForeignKey(
+        Membro,
+        on_delete=models.CASCADE,
+        related_name='acompanhamentos_visitante'
+    )
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    data_prevista = models.DateField()
+    data_realizada = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
+    responsavel = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='acompanhamentos_visitante_responsaveis'
+    )
+    resultado = models.CharField(max_length=100, blank=True)
+    observacao = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ('data_prevista', 'id')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('visitante', 'tipo'),
+                condition=Q(tipo__in=('24H', '7D', '15D')),
+                name='unique_jornada_visitante_tipo'
+            )
+        ]
+
+
+class MensagemWhatsAppVisitante(TenantModel):
+
+    TIPO_CHOICES = (
+        ('24H', 'Mensagem de 24 horas'),
+        ('7D', 'Mensagem de 7 dias'),
+        ('15D', 'Mensagem de 15 dias'),
+    )
+
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    mensagem = models.TextField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('igreja', 'tipo'),
+                name='unique_mensagem_whatsapp_igreja_tipo'
+            )
+        ]

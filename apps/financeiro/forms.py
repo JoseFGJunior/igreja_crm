@@ -96,7 +96,9 @@ class ContaPagarForm(forms.ModelForm):
     class Meta:
         model = LancamentoFinanceiro
         fields = (
+            'data_emissao',
             'data',
+            'data_pagamento',
             'categoria',
             'descricao',
             'valor',
@@ -104,42 +106,39 @@ class ContaPagarForm(forms.ModelForm):
             'observacao',
         )
         widgets = {
+            'data_emissao': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={'class': 'form-control', 'type': 'date'}
+            ),
             'data': forms.DateInput(
                 format='%Y-%m-%d',
-                attrs={
-                    'class': 'form-control',
-                    'type': 'date',
-                }
+                attrs={'class': 'form-control', 'type': 'date'}
+            ),
+            'data_pagamento': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={'class': 'form-control', 'type': 'date'}
             ),
             'categoria': forms.Select(attrs={'class': 'form-select'}),
             'descricao': forms.TextInput(attrs={'class': 'form-control'}),
             'valor': forms.NumberInput(
-                attrs={
-                    'class': 'form-control',
-                    'step': '0.01',
-                    'min': '0',
-                }
+                attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}
             ),
             'forma_pagamento': forms.Select(attrs={'class': 'form-select'}),
             'observacao': forms.Textarea(
-                attrs={
-                    'class': 'form-control',
-                    'rows': 3,
-                }
+                attrs={'class': 'form-control', 'rows': 3}
             ),
         }
 
     def __init__(self, *args, igreja=None, **kwargs):
+        instance = kwargs.get('instance')
         super().__init__(*args, **kwargs)
 
         self.fields['categoria'].queryset = CategoriaFinanceira.objects.filter(
             igreja=igreja,
             tipo=CategoriaFinanceira.TIPO_SAIDA,
             ativa=True
-        ).order_by(
-            'nome'
-        )
-
+        ).order_by('nome')
+        self.fields['data_emissao'].required = instance is None
 
 class DespesaRecorrenteForm(forms.Form):
 

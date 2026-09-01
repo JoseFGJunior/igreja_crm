@@ -11,6 +11,7 @@ from zipfile import ZIP_DEFLATED
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from django.db.models import Sum
 from django.db.models.functions import ExtractMonth
 from django.http import HttpResponse
@@ -99,6 +100,37 @@ def plano_financeiro_required(view_func):
                 }
             )
 
+        permissao = {
+            'fechamento_mensal_view': 'financeiro.view_fechamentofinanceiromensal',
+            'fechamento_confirmar_view': 'financeiro.fechar_mes',
+            'fechamento_reabrir_view': 'financeiro.reabrir_mes',
+            'fechamento_configurar_saldo_inicial_view': 'financeiro.configurar_saldo_inicial',
+            'fechamento_reprocessar_view': 'financeiro.reabrir_mes',
+            'financeiro_dashboard_view': 'financeiro.view_lancamentofinanceiro',
+            'resumo_anual_excel_view': 'financeiro.view_lancamentofinanceiro',
+            'entrada_list_view': 'financeiro.view_lancamentofinanceiro',
+            'entrada_create_view': 'financeiro.add_lancamentofinanceiro',
+            'entrada_update_view': 'financeiro.change_lancamentofinanceiro',
+            'entrada_delete_view': 'financeiro.delete_lancamentofinanceiro',
+            'categoria_entrada_list_view': 'financeiro.view_categoriafinanceira',
+            'categoria_entrada_create_view': 'financeiro.add_categoriafinanceira',
+            'categoria_entrada_update_view': 'financeiro.change_categoriafinanceira',
+            'categoria_entrada_delete_view': 'financeiro.delete_categoriafinanceira',
+            'conta_pagar_list_view': 'financeiro.view_lancamentofinanceiro',
+            'conta_pagar_create_view': 'financeiro.add_lancamentofinanceiro',
+            'despesa_recorrente_create_view': 'financeiro.add_lancamentofinanceiro',
+            'conta_pagar_update_view': 'financeiro.change_lancamentofinanceiro',
+            'conta_pagar_delete_view': 'financeiro.delete_lancamentofinanceiro',
+            'categoria_saida_list_view': 'financeiro.view_categoriafinanceira',
+            'categoria_saida_create_view': 'financeiro.add_categoriafinanceira',
+            'categoria_saida_update_view': 'financeiro.change_categoriafinanceira',
+            'categoria_saida_delete_view': 'financeiro.delete_categoriafinanceira',
+        }.get(view_func.__name__)
+
+        if permissao and not request.user.has_perm(permissao):
+            messages.error(request, 'Você não possui permissão para acessar esta função.')
+            return redirect('dashboard')
+
         return view_func(
             request,
             *args,
@@ -177,7 +209,7 @@ def competencia_anterior(competencia):
 
 
 def pode(request, permissao):
-    return request.user.is_staff or request.user.has_perm(f'financeiro.{permissao}')
+    return request.user.is_superuser or request.user.has_perm(f'financeiro.{permissao}')
 
 
 def fechamento_do_mes(igreja, data_lancamento):
@@ -812,6 +844,41 @@ def categoria_entrada_update_view(request, pk):
 
 @login_required
 @plano_financeiro_required
+def categoria_entrada_delete_view(request, pk):
+    igreja = get_igreja_selecionada(request)
+
+    if igreja is None:
+        return redirect('dashboard')
+
+    categoria = get_object_or_404(
+        CategoriaFinanceira,
+        pk=pk,
+        igreja=igreja,
+        tipo=CategoriaFinanceira.TIPO_ENTRADA
+    )
+
+    if request.method == 'POST':
+        try:
+            categoria.delete()
+        except ProtectedError:
+            messages.error(
+                request,
+                'Esta categoria não pode ser excluída porque possui entradas vinculadas.'
+            )
+        else:
+            messages.success(request, 'Categoria de entrada excluída com sucesso.')
+
+        return redirect('financeiro_categoria_entrada_list')
+
+    return render(
+        request,
+        'financeiro/categoria_entrada_confirm_delete.html',
+        {'igreja': igreja, 'categoria': categoria}
+    )
+
+
+@login_required
+@plano_financeiro_required
 def conta_pagar_list_view(request):
     igreja = get_igreja_selecionada(request)
 
@@ -915,6 +982,7 @@ def despesa_recorrente_create_view(request):
                 LancamentoFinanceiro(
                     igreja=igreja,
                     tipo=LancamentoFinanceiro.TIPO_SAIDA,
+                    data_emissao=timezone.localdate(),
                     data=adicionar_meses(
                         dados['data_primeiro_vencimento'],
                         indice
@@ -1114,4 +1182,39 @@ def categoria_saida_update_view(request, pk):
             'categoria': categoria,
             'titulo': 'Editar categoria de saida',
         }
+    )
+
+
+@login_required
+@plano_financeiro_required
+def categoria_saida_delete_view(request, pk):
+    igreja = get_igreja_selecionada(request)
+
+    if igreja is None:
+        return redirect('dashboard')
+
+    categoria = get_object_or_404(
+        CategoriaFinanceira,
+        pk=pk,
+        igreja=igreja,
+        tipo=CategoriaFinanceira.TIPO_SAIDA
+    )
+
+    if request.method == 'POST':
+        try:
+            categoria.delete()
+        except ProtectedError:
+            messages.error(
+                request,
+                'Esta categoria não pode ser excluída porque possui contas a pagar vinculadas.'
+            )
+        else:
+            messages.success(request, 'Categoria de saída excluída com sucesso.')
+
+        return redirect('financeiro_categoria_saida_list')
+
+    return render(
+        request,
+        'financeiro/categoria_saida_confirm_delete.html',
+        {'igreja': igreja, 'categoria': categoria}
     )

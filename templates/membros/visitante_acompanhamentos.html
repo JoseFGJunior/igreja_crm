@@ -1,0 +1,42 @@
+{% extends 'base/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div><h4 class="mb-1">Acompanhamento</h4><span class="text-muted">{{ igreja.nome }}</span></div>
+  <a href="{% url 'visitante_dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <a href="#aniversariantes-hoje" class="text-decoration-none text-reset">
+      <div class="card shadow-sm border-warning h-100"><div class="card-body">
+        <div class="d-flex justify-content-between"><h6>Aniversariantes</h6><span class="fs-4">🎂</span></div>
+        <div>Aniversariantes de hoje: <strong>{{ aniversariantes_hoje_count }}</strong></div>
+      </div></div>
+    </a>
+  </div>
+  <div class="col-md-4"><div class="card shadow-sm h-100"><div class="card-body"><h6>Acompanhamentos para hoje</h6><strong class="fs-3">{{ hoje|length }}</strong></div></div></div>
+  <div class="col-md-4"><div class="card shadow-sm h-100"><div class="card-body"><h6>Atrasados</h6><strong class="fs-3">{{ atrasados|length }}</strong></div></div></div>
+</div>
+
+<div id="aniversariantes-hoje" class="card shadow-sm border-warning mb-4">
+  <div class="card-body"><h5 class="mb-3">🎂 Aniversariantes de Hoje</h5>
+    <div class="row g-3">
+      {% for membro in aniversariantes_hoje %}
+      <div class="col-md-6"><div class="border rounded p-3 bg-warning-subtle h-100">
+        <h6 class="mb-1">{{ membro.nome }}</h6><div>{{ membro.data_nascimento|date:'d/m' }}</div><div class="small mb-2">Telefone: {{ membro.telefone|default:membro.whatsapp|default:'-' }}</div>
+        {% if membro.whatsapp_url %}<a href="{{ membro.whatsapp_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm"><i class="bi bi-whatsapp"></i> Enviar WhatsApp</a>{% else %}<span class="text-muted small">Sem telefone cadastrado</span>{% endif %}
+      </div></div>
+      {% empty %}<div class="col-12 text-muted">Nenhum aniversariante hoje.</div>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-4"><div class="card-body"><h5 class="mb-3">Próximos aniversariantes</h5>
+  <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Data</th><th>Membro</th><th>Telefone</th><th class="text-end">Ação</th></tr></thead><tbody>
+  {% for membro in proximos_aniversariantes %}<tr class="{% if membro in aniversariantes_hoje %}table-warning fw-semibold{% endif %}"><td>{{ membro.data_nascimento|date:'d/m' }}</td><td>{{ membro.nome }}</td><td>{{ membro.telefone|default:membro.whatsapp|default:'-' }}</td><td class="text-end">{% if membro.whatsapp_url %}<a href="{{ membro.whatsapp_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm"><i class="bi bi-whatsapp"></i> WhatsApp</a>{% else %}<span class="text-muted small">Sem telefone</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="4" class="text-muted">Nenhum aniversariante nos próximos 7 dias.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div></div>
+
+<div class="card shadow-sm mb-4"><div class="card-body"><h5>Para hoje</h5><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Visitante</th><th>Etapa</th><th>Responsável</th><th></th></tr></thead><tbody>{% for item in hoje %}<tr><td>{{ item.visitante.nome }}</td><td>{{ item.get_tipo_display }}</td><td>{{ item.responsavel|default:'-' }}</td><td><a href="{% url 'visitante_detail' item.visitante.pk %}" class="btn btn-sm btn-primary">Abrir</a></td></tr>{% empty %}<tr><td colspan="4" class="text-muted">Nenhum acompanhamento para hoje.</td></tr>{% endfor %}</tbody></table></div></div></div>
+<div class="card shadow-sm"><div class="card-body"><h5>Atrasados</h5><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Visitante</th><th>Etapa</th><th>Data prevista</th><th></th></tr></thead><tbody>{% for item in atrasados %}<tr><td>{{ item.visitante.nome }}</td><td>{{ item.get_tipo_display }}</td><td>{{ item.data_prevista|date:'d/m/Y' }}</td><td><a href="{% url 'visitante_detail' item.visitante.pk %}" class="btn btn-sm btn-primary">Abrir</a></td></tr>{% empty %}<tr><td colspan="4" class="text-muted">Nenhum acompanhamento atrasado.</td></tr>{% endfor %}</tbody></table></div></div></div>
+{% endblock %}

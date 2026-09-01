@@ -15,15 +15,15 @@
     </div>
 
     <div class="page-actions d-flex gap-2">
-        <a href="{% url 'financeiro_categoria_entrada_list' %}" class="btn btn-outline-secondary">
+        {% if perms.financeiro.view_categoriafinanceira %}<a href="{% url 'financeiro_categoria_entrada_list' %}" class="btn btn-outline-secondary">
             <i class="bi bi-tags"></i>
             Categorias
-        </a>
+        </a>{% endif %}
 
-        <a href="{% url 'financeiro_entrada_create' %}" class="btn btn-success">
+        {% if perms.financeiro.add_lancamentofinanceiro %}<a href="{% url 'financeiro_entrada_create' %}" class="btn btn-success">
             <i class="bi bi-plus-lg"></i>
             Nova entrada
-        </a>
+        </a>{% endif %}
     </div>
 
 </div>
@@ -113,21 +113,21 @@
                             R$ {{ entrada.valor|floatformat:2 }}
                         </td>
                         <td class="text-end">
-                            <a
+                            {% if perms.financeiro.change_lancamentofinanceiro %}<a
                                 href="{% url 'financeiro_entrada_update' entrada.id %}"
                                 class="btn btn-outline-secondary btn-sm"
                                 title="Editar"
                             >
                                 <i class="bi bi-pencil"></i>
-                            </a>
+                            </a>{% endif %}
 
-                            <a
+                            {% if perms.financeiro.delete_lancamentofinanceiro %}<a
                                 href="{% url 'financeiro_entrada_delete' entrada.id %}"
                                 class="btn btn-outline-danger btn-sm"
                                 title="Excluir"
                             >
                                 <i class="bi bi-trash"></i>
-                            </a>
+                            </a>{% endif %}
                         </td>
                     </tr>
 

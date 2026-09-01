@@ -30,7 +30,9 @@ class LancamentoFinanceiroAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'igreja',
+        'data_emissao',
         'data',
+        'data_pagamento',
         'tipo',
         'categoria',
         'descricao',
@@ -43,7 +45,9 @@ class LancamentoFinanceiroAdmin(admin.ModelAdmin):
         'tipo',
         'categoria',
         'forma_pagamento',
+        'data_emissao',
         'data',
+        'data_pagamento',
     )
     search_fields = (
         'descricao',
@@ -52,7 +56,6 @@ class LancamentoFinanceiroAdmin(admin.ModelAdmin):
         'categoria__nome',
     )
     date_hierarchy = 'data'
-
 
 @admin.register(FechamentoFinanceiroMensal)
 class FechamentoFinanceiroMensalAdmin(admin.ModelAdmin):

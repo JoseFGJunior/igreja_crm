@@ -23,6 +23,8 @@ class FinanceiroTestCase(TestCase):
             username='tesoureiro',
             password='senha-segura'
         )
+        self.usuario.is_superuser = True
+        self.usuario.save()
         UsuarioIgreja.objects.create(
             usuario=self.usuario,
             igreja=self.igreja,
@@ -80,6 +82,38 @@ class FinanceiroTestCase(TestCase):
             'Nova despesa recorrente ou parcelada'
         )
         self.assertContains(response, 'Gerar despesas')
+
+    def test_exclui_categoria_de_entrada_sem_lancamentos(self):
+        categoria = CategoriaFinanceira.objects.create(
+            igreja=self.igreja,
+            nome='Doações',
+            tipo=CategoriaFinanceira.TIPO_ENTRADA,
+        )
+
+        response = self.client.post(
+            reverse('financeiro_categoria_entrada_delete', args=[categoria.id])
+        )
+
+        self.assertRedirects(response, reverse('financeiro_categoria_entrada_list'))
+        self.assertFalse(CategoriaFinanceira.objects.filter(id=categoria.id).exists())
+
+    def test_nao_exclui_categoria_de_saida_com_lancamentos(self):
+        LancamentoFinanceiro.objects.create(
+            igreja=self.igreja,
+            categoria=self.categoria,
+            tipo=LancamentoFinanceiro.TIPO_SAIDA,
+            descricao='Aluguel',
+            valor=Decimal('100.00'),
+            data=date(2026, 1, 1),
+        )
+
+        response = self.client.post(
+            reverse('financeiro_categoria_saida_delete', args=[self.categoria.id]),
+            follow=True,
+        )
+
+        self.assertTrue(CategoriaFinanceira.objects.filter(id=self.categoria.id).exists())
+        self.assertContains(response, 'possui contas a pagar vinculadas')
 
     def test_ajusta_recorrencia_para_o_ultimo_dia_do_mes(self):
         self.client.post(

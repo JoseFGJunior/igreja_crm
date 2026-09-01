@@ -1,0 +1,18 @@
+{% extends 'base/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h4 class="mb-1">Gestão de visitantes</h4><span class="text-muted">{{ igreja.nome }}</span></div>
+    <div class="d-flex gap-2"><a href="{% url 'visitante_list' %}" class="btn btn-outline-primary">Visitantes</a><a href="{% url 'visitante_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Novo visitante</a></div>
+</div>
+<div class="row g-3 mb-4">
+    {% for label,value in labels %}{% endfor %}
+    <div class="col-md-4 col-lg-2"><div class="card shadow-sm"><div class="card-body"><small>Visitantes no mês</small><h2>{{ visitantes_mes }}</h2></div></div></div>
+    <div class="col-md-4 col-lg-2"><div class="card shadow-sm"><div class="card-body"><small>Visitantes na semana</small><h2>{{ visitantes_semana }}</h2></div></div></div>
+    <div class="col-md-4 col-lg-2"><div class="card shadow-sm"><div class="card-body"><small>Contatos hoje</small><h2>{{ acompanhamentos_hoje }}</h2></div></div></div>
+    <div class="col-md-4 col-lg-2"><div class="card shadow-sm"><div class="card-body"><small>Atrasados</small><h2>{{ acompanhamentos_atrasados }}</h2></div></div></div>
+    <div class="col-md-4 col-lg-2"><div class="card shadow-sm"><div class="card-body"><small>Em acompanhamento</small><h2>{{ em_acompanhamento }}</h2></div></div></div>
+    <div class="col-md-4 col-lg-2"><div class="card shadow-sm"><div class="card-body"><small>Retornaram</small><h2>{{ retornaram }}</h2></div></div></div>
+</div>
+<div class="mb-3"><a href="{% url 'visitante_mensagens' %}" class="btn btn-outline-secondary">Editar mensagens do WhatsApp</a></div>
+<div class="card shadow-sm"><div class="card-body"><h5>Acompanhamento de visitantes</h5><p class="text-muted mb-0">Use a lista para registrar contatos, novas tentativas e retornos à igreja.</p></div></div>
+{% endblock %}

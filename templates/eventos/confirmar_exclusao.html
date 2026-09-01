@@ -1,0 +1,2 @@
+{% extends 'base/base.html' %}
+{% block content %}<div class="card shadow-sm"><div class="card-body"><h4>Excluir evento</h4><p>Tem certeza que deseja excluir este evento?</p><p><strong>{{ evento.titulo }}</strong> — {{ evento.data|date:'d/m/Y' }}</p><form method="post">{% csrf_token %}<a href="{% url 'evento_detail' evento.pk %}" class="btn btn-outline-secondary">Cancelar</a> <button class="btn btn-danger">Excluir evento</button></form></div></div>{% endblock %}

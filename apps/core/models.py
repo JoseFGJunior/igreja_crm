@@ -22,6 +22,30 @@ class TenantModel(models.Model):
         abstract = True
 
 
+class MensagemAniversario(TenantModel):
+
+    texto = models.TextField(
+        default='Olá, {nome}! 🎉\n\nDesejamos a você um feliz aniversário! Que Deus abençoe sua vida e sua caminhada. 🙏'
+    )
+
+    versiculo = models.TextField(
+        blank=True,
+        default='“O Senhor te abençoe e te guarde.” — Números 6:24'
+    )
+
+    ativa = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Mensagem de aniversário'
+        verbose_name_plural = 'Mensagens de aniversário'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('igreja',),
+                name='unique_mensagem_aniversario_igreja'
+            )
+        ]
+
+
 class AcaoMissionaria(models.Model):
 
     titulo = models.CharField(

@@ -31,6 +31,11 @@ urlpatterns = [
         include('apps.financeiro.urls')
     ),
 
+    path(
+        'eventos/',
+        include('apps.eventos.urls')
+    ),
+
 ]
 
 if settings.DEBUG:

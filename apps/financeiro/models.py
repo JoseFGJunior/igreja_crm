@@ -105,6 +105,18 @@ class LancamentoFinanceiro(TenantModel):
 
     data = models.DateField()
 
+    data_emissao = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Data de emissão'
+    )
+
+    data_pagamento = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Data de pagamento'
+    )
+
     forma_pagamento = models.CharField(
         max_length=20,
         choices=FORMA_PAGAMENTO_CHOICES,

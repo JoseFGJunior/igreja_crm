@@ -3,9 +3,11 @@ from django.urls import path
 from apps.financeiro.views import categoria_entrada_create_view
 from apps.financeiro.views import categoria_entrada_list_view
 from apps.financeiro.views import categoria_entrada_update_view
+from apps.financeiro.views import categoria_entrada_delete_view
 from apps.financeiro.views import categoria_saida_create_view
 from apps.financeiro.views import categoria_saida_list_view
 from apps.financeiro.views import categoria_saida_update_view
+from apps.financeiro.views import categoria_saida_delete_view
 from apps.financeiro.views import conta_pagar_create_view
 from apps.financeiro.views import conta_pagar_delete_view
 from apps.financeiro.views import conta_pagar_list_view
@@ -87,6 +89,12 @@ urlpatterns = [
     ),
 
     path(
+        'entradas/categorias/<int:pk>/excluir/',
+        categoria_entrada_delete_view,
+        name='financeiro_categoria_entrada_delete'
+    ),
+
+    path(
         'contas-a-pagar/',
         conta_pagar_list_view,
         name='financeiro_conta_pagar_list'
@@ -132,6 +140,12 @@ urlpatterns = [
         'contas-a-pagar/categorias/<int:pk>/editar/',
         categoria_saida_update_view,
         name='financeiro_categoria_saida_update'
+    ),
+
+    path(
+        'contas-a-pagar/categorias/<int:pk>/excluir/',
+        categoria_saida_delete_view,
+        name='financeiro_categoria_saida_delete'
     ),
 
 ]

@@ -15,20 +15,20 @@
     </div>
 
     <div class="d-flex gap-2">
-        <a href="{% url 'financeiro_categoria_saida_list' %}" class="btn btn-outline-secondary">
+        {% if perms.financeiro.view_categoriafinanceira %}<a href="{% url 'financeiro_categoria_saida_list' %}" class="btn btn-outline-secondary">
             <i class="bi bi-tags"></i>
             Categorias
-        </a>
+        </a>{% endif %}
 
-        <a href="{% url 'financeiro_despesa_recorrente_create' %}" class="btn btn-outline-danger">
+        {% if perms.financeiro.add_lancamentofinanceiro %}<a href="{% url 'financeiro_despesa_recorrente_create' %}" class="btn btn-outline-danger">
             <i class="bi bi-arrow-repeat"></i>
             Recorrente / parcelada
-        </a>
+        </a>{% endif %}
 
-        <a href="{% url 'financeiro_conta_pagar_create' %}" class="btn btn-danger">
+        {% if perms.financeiro.add_lancamentofinanceiro %}<a href="{% url 'financeiro_conta_pagar_create' %}" class="btn btn-danger">
             <i class="bi bi-plus-lg"></i>
             Nova conta
-        </a>
+        </a>{% endif %}
     </div>
 
 </div>
@@ -94,7 +94,9 @@
 
             <thead>
                 <tr>
-                    <th>Data</th>
+                    <th>Vencimento</th>
+                    <th>Emissão</th>
+                    <th>Pagamento</th>
                     <th>Descricao</th>
                     <th>Categoria</th>
                     <th>Forma</th>
@@ -109,6 +111,8 @@
 
                     <tr>
                         <td>{{ conta.data|date:"d/m/Y" }}</td>
+                        <td>{{ conta.data_emissao|date:"d/m/Y"|default:"—" }}</td>
+                        <td>{{ conta.data_pagamento|date:"d/m/Y"|default:"—" }}</td>
                         <td>
                             {{ conta.descricao }}
                             {% if conta.parcela_display %}
@@ -123,28 +127,28 @@
                             R$ {{ conta.valor|floatformat:2 }}
                         </td>
                         <td class="text-end">
-                            <a
+                            {% if perms.financeiro.change_lancamentofinanceiro %}<a
                                 href="{% url 'financeiro_conta_pagar_update' conta.id %}"
                                 class="btn btn-outline-secondary btn-sm"
                                 title="Editar"
                             >
                                 <i class="bi bi-pencil"></i>
-                            </a>
+                            </a>{% endif %}
 
-                            <a
+                            {% if perms.financeiro.delete_lancamentofinanceiro %}<a
                                 href="{% url 'financeiro_conta_pagar_delete' conta.id %}"
                                 class="btn btn-outline-danger btn-sm"
                                 title="Excluir"
                             >
                                 <i class="bi bi-trash"></i>
-                            </a>
+                            </a>{% endif %}
                         </td>
                     </tr>
 
                 {% empty %}
 
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
+                        <td colspan="8" class="text-center text-muted py-4">
                             Nenhuma conta a pagar encontrada.
                         </td>
                     </tr>

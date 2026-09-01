@@ -6,14 +6,20 @@ from zipfile import ZipFile
 from zipfile import ZIP_DEFLATED
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import permission_required
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils import timezone
+from urllib.parse import quote
 
 from apps.accounts.models import UsuarioIgreja
 from apps.core.models import AcaoMissionaria
+from apps.core.models import MensagemAniversario
+from apps.core.forms import MensagemAniversarioForm
 from apps.membros.models import Membro
+from apps.membros.models import AcompanhamentoVisitante
+from apps.membros.services import normalizar_whatsapp
 
 
 def home_view(request):
@@ -320,8 +326,14 @@ def dashboard_view(request):
     sem_data_nascimento = 0
     grafico_faixa_etaria_labels = []
     grafico_faixa_etaria_totais = []
+    visitantes_para_acompanhar_hoje = 0
+    visitantes_para_acompanhar_atrasados = 0
+    aniversariantes_hoje = []
+    mensagem_aniversario = None
 
-    if igreja_selecionada:
+    pode_visualizar_membros = request.user.has_perm('membros.view_membro')
+
+    if igreja_selecionada and pode_visualizar_membros:
         membros = Membro.objects.filter(
             igreja=igreja_selecionada.igreja
         )
@@ -344,6 +356,30 @@ def dashboard_view(request):
             )
         )
 
+        aniversariantes_hoje = [
+            membro for membro in membros_com_nascimento
+            if (
+                membro.data_nascimento.month == hoje.month
+                and membro.data_nascimento.day == hoje.day
+            )
+        ]
+        mensagem_aniversario, _ = MensagemAniversario.objects.get_or_create(
+            igreja=igreja_selecionada.igreja
+        )
+        if mensagem_aniversario.ativa:
+            for aniversariante in aniversariantes_hoje:
+                texto = mensagem_aniversario.texto.replace(
+                    '{nome}', aniversariante.nome
+                )
+                if mensagem_aniversario.versiculo:
+                    texto = f'{texto}\n\n📖 {mensagem_aniversario.versiculo}'
+                texto = f'{texto}\n\n{igreja_selecionada.igreja.nome}'
+                if aniversariante.telefone:
+                    aniversariante.whatsapp_url = (
+                        f'https://wa.me/{normalizar_whatsapp(aniversariante.telefone)}'
+                        f'?text={quote(texto)}'
+                    )
+
         aniversariantes_semana = get_aniversariantes_semana(
             membros_com_nascimento,
             hoje
@@ -364,6 +400,17 @@ def dashboard_view(request):
             faixa['total']
             for faixa in resumo_faixa_etaria
         ]
+
+        acompanhamentos = AcompanhamentoVisitante.objects.filter(
+            igreja=igreja_selecionada.igreja,
+            status='PENDENTE',
+        )
+        visitantes_para_acompanhar_hoje = acompanhamentos.filter(
+            data_prevista=hoje
+        ).count()
+        visitantes_para_acompanhar_atrasados = acompanhamentos.filter(
+            data_prevista__lt=hoje
+        ).count()
 
         if outras_faixas_etarias:
             grafico_faixa_etaria_labels.append('Outras faixas')
@@ -389,11 +436,34 @@ def dashboard_view(request):
             'sem_data_nascimento': sem_data_nascimento,
             'grafico_faixa_etaria_labels': grafico_faixa_etaria_labels,
             'grafico_faixa_etaria_totais': grafico_faixa_etaria_totais,
+            'pode_visualizar_membros': pode_visualizar_membros,
+            'visitantes_para_acompanhar_hoje': visitantes_para_acompanhar_hoje,
+            'visitantes_para_acompanhar_atrasados': visitantes_para_acompanhar_atrasados,
+            'aniversariantes_hoje': aniversariantes_hoje,
+            'mensagem_aniversario': mensagem_aniversario,
         }
     )
 
 
 @login_required
+@permission_required('membros.change_membro', raise_exception=True)
+def aniversario_mensagem_view(request):
+    igreja = get_igreja_selecionada(request)
+    if igreja is None:
+        return redirect('dashboard')
+    mensagem, _ = MensagemAniversario.objects.get_or_create(igreja=igreja)
+    form = MensagemAniversarioForm(request.POST or None, instance=mensagem)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('dashboard')
+    return render(request, 'core/aniversario_mensagem.html', {
+        'form': form,
+        'igreja': igreja,
+    })
+
+
+@login_required
+@permission_required('membros.view_membro', raise_exception=True)
 def exportar_faixa_etaria_excel_view(request):
     igreja = get_igreja_selecionada(request)
 
@@ -449,6 +519,7 @@ def exportar_faixa_etaria_excel_view(request):
 
 
 @login_required
+@permission_required('membros.view_membro', raise_exception=True)
 def exportar_visitantes_excel_view(request):
     igreja = get_igreja_selecionada(request)
 

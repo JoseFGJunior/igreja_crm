@@ -1,4 +1,5 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block content %}
 
@@ -48,7 +49,20 @@
 
 </div>
 
+{% if pode_visualizar_membros %}
 <div class="row g-3 mb-4">
+
+    <div class="col-md-3">
+        <a href="{% url 'visitante_dashboard' %}" class="text-decoration-none text-reset">
+            <div class="card card-dashboard shadow-sm">
+                <div class="card-body">
+                    <h6>Visitantes para acompanhar</h6>
+                    <div>Hoje: <strong>{{ visitantes_para_acompanhar_hoje }}</strong></div>
+                    <div>Atrasados: <strong>{{ visitantes_para_acompanhar_atrasados }}</strong></div>
+                </div>
+            </div>
+        </a>
+    </div>
 
     <div class="col-md-3">
 
@@ -110,6 +124,44 @@
 
     </div>
 
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Aniversariantes de hoje</h5>
+            {% if perms.membros.change_membro %}
+                <a href="{% url 'aniversario_mensagem' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-pencil"></i> Editar mensagem
+                </a>
+            {% endif %}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Nome</th><th>Data</th><th>WhatsApp</th><th class="text-end">Ação</th></tr></thead>
+                <tbody>
+                    {% for membro in aniversariantes_hoje %}
+                        <tr>
+                            <td>{{ membro.nome }}</td>
+                            <td>{{ membro.data_nascimento|date:"d/m" }}</td>
+                            <td>{{ membro.telefone|default:"-" }}</td>
+                            <td class="text-end">
+                                {% if membro.whatsapp_url %}
+                                    <a href="{{ membro.whatsapp_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">
+                                        <i class="bi bi-whatsapp"></i> WhatsApp
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted small">Sem WhatsApp</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="text-center text-muted py-4">Nenhum aniversariante hoje.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <div class="card shadow-sm mb-4">
@@ -210,7 +262,6 @@
 </div>
 
 <div class="row g-3">
-
     <div class="col-lg-6">
 
         <div class="card shadow-sm">
@@ -324,6 +375,9 @@
     </div>
 
 </div>
+{% else %}
+<div class="alert alert-info">Seu usuário não possui permissão para visualizar os dados de membros.</div>
+{% endif %}
 
 {% endblock %}
 

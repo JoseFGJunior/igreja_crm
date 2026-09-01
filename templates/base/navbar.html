@@ -23,6 +23,11 @@
             {{ request.user }}
         </span>
 
+        <a href="{% url 'change_password' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-key me-1"></i>
+            Alterar senha
+        </a>
+
         <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">
 
             Sair
