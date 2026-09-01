@@ -1,126 +1,63 @@
 <aside id="app-sidebar" class="sidebar bg-dark text-white p-3">
-
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="sidebar-brand">
             <span class="sidebar-brand-mark"><i class="bi bi-heart"></i></span>
-            <span>
-                <strong>Elo Perfeito</strong>
-                <small>PARCEIROS EM MISSÃO</small>
-            </span>
+            <span><strong>Elo Perfeito</strong><small>PARCEIROS EM MISSÃO</small></span>
         </div>
-
-        <button
-            class="btn btn-sm btn-outline-light sidebar-close"
-            type="button"
-            data-sidebar-close
-            aria-label="Fechar menu"
-        >
-            <i class="bi bi-x-lg"></i>
-        </button>
+        <button class="btn btn-sm btn-outline-light sidebar-close" type="button" data-sidebar-close aria-label="Fechar menu"><i class="bi bi-x-lg"></i></button>
     </div>
 
-    <ul class="nav flex-column">
-
-        <li class="nav-item mb-2">
-            <a href="{% url 'dashboard' %}" class="nav-link text-white">
-                <i class="bi bi-speedometer2"></i>
-                Dashboard
-            </a>
-        </li>
-
-        {% if perms.membros.view_membro or perms.membros.add_membro or perms.membros.change_membro or perms.membros.delete_membro %}
-            <li class="nav-item mb-2">
-                <a href="{% if perms.membros.view_membro %}{% url 'membro_list' %}{% else %}{% url 'membro_create' %}{% endif %}" class="nav-link text-white">
-                    <i class="bi bi-people"></i>
-                    Membros
-                </a>
-            </li>
-        {% endif %}
-
-        {% if perms.membros.view_membro or perms.membros.add_membro or perms.membros.change_membro %}
-            <li class="nav-item mb-2">
-                <span class="nav-link text-white">
-                    <i class="bi bi-grid"></i>
-                    CRM
-                </span>
-                <div class="ps-3">
-                    <a href="{% if perms.membros.view_membro %}{% url 'visitante_dashboard' %}{% else %}{% url 'visitante_create' %}{% endif %}" class="nav-link text-white">
-                        <i class="bi bi-person-plus"></i>
-                        Visitantes
-                    </a>
-                    {% if perms.membros.view_membro %}
-                        <a href="{% url 'visitante_acompanhamentos' %}" class="nav-link text-white">
-                            <i class="bi bi-clipboard-check"></i>
-                            Acompanhamentos
-                        </a>
-                    {% endif %}
-                    {% if perms.membros.change_membro %}
-                        <a href="{% url 'visitante_mensagens' %}" class="nav-link text-white">
-                            <i class="bi bi-whatsapp"></i>
-                            Mensagens WhatsApp
-                        </a>
-                    {% endif %}
-                </div>
-            </li>
-        {% endif %}
-
-
-        <li class="nav-item mb-2">
-            <a href="{% url 'eventos_calendario' %}" class="nav-link text-white">
-                <i class="bi bi-calendar-event"></i>
-                Eventos
-            </a>
-        </li>
-
-        <li class="nav-item mt-3 mb-2">
-            <span class="nav-link text-white-50">
-                <i class="bi bi-cash-stack"></i>
-                Financeiro
-            </span>
-        </li>
-
-        {% if plano_completo_ativo %}
-
-            {% if perms.financeiro.view_lancamentofinanceiro %}<li class="nav-item mb-2">
-                <a href="{% url 'financeiro_dashboard' %}" class="nav-link text-white ps-4">
-                    <i class="bi bi-graph-up"></i>
-                    Dashboard
-                </a>
-            </li>{% endif %}
-
-            {% if perms.financeiro.view_lancamentofinanceiro %}<li class="nav-item mb-2">
-                <a href="{% url 'financeiro_entrada_list' %}" class="nav-link text-white ps-4">
-                    <i class="bi bi-arrow-down-circle"></i>
-                    Entradas
-                </a>
-            </li>{% endif %}
-
-            {% if perms.financeiro.view_lancamentofinanceiro %}<li class="nav-item mb-2">
-                <a href="{% url 'financeiro_conta_pagar_list' %}" class="nav-link text-white ps-4">
-                    <i class="bi bi-arrow-up-circle"></i>
-                    Contas a pagar
-                </a>
-            </li>{% endif %}
-
-            {% if perms.financeiro.view_fechamentofinanceiromensal %}<li class="nav-item mb-2">
-                <a href="{% url 'financeiro_fechamento_mensal' %}" class="nav-link text-white ps-4">
-                    <i class="bi bi-calendar-check"></i>
-                    Fechamento mensal
-                </a>
-            </li>{% endif %}
-
-        {% else %}
-
-            <li class="nav-item mb-2">
-                <a href="{% url 'financeiro_dashboard' %}" class="nav-link text-white ps-4">
-                    <i class="bi bi-lock"></i>
-                    Plano completo
-                </a>
+    <nav aria-label="Navegação principal">
+        <ul class="nav flex-column gap-2">
+            <li class="nav-item">
+                <details class="sidebar-section" open>
+                    <summary class="nav-link sidebar-section-toggle text-white"><i class="bi bi-folder2-open"></i> Secretaria</summary>
+                    <div class="sidebar-section-items">
+                        <a href="{% url 'dashboard' %}" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Painel de Controle</a>
+                        {% if perms.membros.view_membro or perms.membros.add_membro or perms.membros.change_membro or perms.membros.delete_membro %}
+                            <a href="{% if perms.membros.view_membro %}{% url 'membro_list' %}{% else %}{% url 'membro_create' %}{% endif %}" class="nav-link text-white"><i class="bi bi-people"></i> Membros</a>
+                        {% endif %}
+                    </div>
+                </details>
             </li>
 
-        {% endif %}
+            {% if perms.membros.view_membro or perms.membros.add_membro or perms.membros.change_membro %}
+                <li class="nav-item">
+                    <details class="sidebar-section" open>
+                        <summary class="nav-link sidebar-section-toggle text-white"><i class="bi bi-people-fill"></i> Gestão de Pessoas</summary>
+                        <div class="sidebar-section-items">
+                            <a href="{% if perms.membros.view_membro %}{% url 'visitante_dashboard' %}{% else %}{% url 'visitante_create' %}{% endif %}" class="nav-link text-white"><i class="bi bi-person-plus"></i> Visitantes</a>
+                            {% if perms.membros.view_membro %}<a href="{% url 'visitante_acompanhamentos' %}" class="nav-link text-white"><i class="bi bi-clipboard-check"></i> Acompanhamentos</a>{% endif %}
+                            {% if perms.membros.change_membro %}<a href="{% url 'visitante_mensagens' %}" class="nav-link text-white"><i class="bi bi-whatsapp"></i> Mensagens do WhatsApp</a>{% endif %}
+                        </div>
+                    </details>
+                </li>
+            {% endif %}
 
-    </ul>
+            <li class="nav-item">
+                <details class="sidebar-section" open>
+                    <summary class="nav-link sidebar-section-toggle text-white"><i class="bi bi-calendar3"></i> Agenda</summary>
+                    <div class="sidebar-section-items"><a href="{% url 'eventos_calendario' %}" class="nav-link text-white"><i class="bi bi-calendar-event"></i> Eventos</a></div>
+                </details>
+            </li>
 
-
+            <li class="nav-item">
+                <details class="sidebar-section">
+                    <summary class="nav-link sidebar-section-toggle text-white"><i class="bi bi-cash-stack"></i> Financeiro</summary>
+                    <div class="sidebar-section-items">
+                        {% if plano_completo_ativo %}
+                            {% if perms.financeiro.view_lancamentofinanceiro %}
+                                <a href="{% url 'financeiro_dashboard' %}" class="nav-link text-white"><i class="bi bi-graph-up"></i> Dashboard</a>
+                                <a href="{% url 'financeiro_entrada_list' %}" class="nav-link text-white"><i class="bi bi-arrow-down-circle"></i> Entradas</a>
+                                <a href="{% url 'financeiro_conta_pagar_list' %}" class="nav-link text-white"><i class="bi bi-arrow-up-circle"></i> Contas a pagar</a>
+                            {% endif %}
+                            {% if perms.financeiro.view_fechamentofinanceiromensal %}<a href="{% url 'financeiro_fechamento_mensal' %}" class="nav-link text-white"><i class="bi bi-calendar-check"></i> Fechamento mensal</a>{% endif %}
+                        {% else %}
+                            <a href="{% url 'financeiro_dashboard' %}" class="nav-link text-white"><i class="bi bi-lock"></i> Plano completo</a>
+                        {% endif %}
+                    </div>
+                </details>
+            </li>
+        </ul>
+    </nav>
 </aside>
