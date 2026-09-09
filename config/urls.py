@@ -7,7 +7,7 @@ from apps.portal.views import portal_domain_home
 
 
 urlpatterns = [
-    path('', portal_domain_home, name='portal_domain_home'),
+    path('', RedirectView.as_view(pattern_name='dashboard', permanent=False), name='portal_domain_home'),
 
     path(
         'admin/',
