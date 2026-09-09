@@ -38,6 +38,10 @@ class Evento(TenantModel):
     local = models.CharField(max_length=150, blank=True)
     categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, default=CATEGORIA_OUTRO)
     observacoes = models.TextField(blank=True)
+    exibir_site = models.BooleanField(default=True)
+    destaque_site = models.BooleanField(default=False)
+    imagem = models.ImageField(upload_to='eventos/', blank=True, null=True)
+    imagem_mobile = models.ImageField(upload_to='eventos/mobile/', blank=True, null=True)
 
     class Meta:
         ordering = ('data', 'hora_inicio', 'titulo')

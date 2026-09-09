@@ -2,9 +2,11 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
+from django.views.generic import RedirectView
 
 
 urlpatterns = [
+    path('', RedirectView.as_view(pattern_name='dashboard', permanent=False), name='portal_domain_home'),
 
     path(
         'admin/',
@@ -35,6 +37,8 @@ urlpatterns = [
         'eventos/',
         include('apps.eventos.urls')
     ),
+
+    path('<slug:slug>/', include('apps.portal.urls')),
 
 ]
 

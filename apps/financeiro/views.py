@@ -30,8 +30,7 @@ from apps.financeiro.forms import EntradaFinanceiraForm
 from apps.financeiro.models import CategoriaFinanceira
 from apps.financeiro.models import LancamentoFinanceiro
 from apps.financeiro.models import FechamentoFinanceiroMensal
-
-
+from apps.membros.models import Membro
 MESES_ANO = [
     (1, 'JAN'),
     (2, 'FEV'),
@@ -611,6 +610,11 @@ def entrada_list_view(request):
         return redirect('dashboard')
 
     pesquisa = request.GET.get('q', '').strip()
+    data_inicio = _parse_query_date(request.GET.get('data_inicio'))
+    data_fim = _parse_query_date(request.GET.get('data_fim'))
+    forma_pagamento = request.GET.get('forma_pagamento', '').strip()
+    categoria_id = request.GET.get('categoria', '').strip()
+    membro_id = request.GET.get('membro', '').strip()
     entradas = LancamentoFinanceiro.objects.select_related(
         'categoria',
         'membro'
@@ -620,13 +624,23 @@ def entrada_list_view(request):
     )
 
     if pesquisa:
+        entradas = entradas.filter(descricao__icontains=pesquisa)
+    if data_inicio:
+        entradas = entradas.filter(data__gte=data_inicio)
+    if data_fim:
+        entradas = entradas.filter(data__lte=data_fim)
+    if forma_pagamento in dict(LancamentoFinanceiro.FORMA_PAGAMENTO_CHOICES):
+        entradas = entradas.filter(forma_pagamento=forma_pagamento)
+    if categoria_id.isdigit():
         entradas = entradas.filter(
-            descricao__icontains=pesquisa
+            categoria_id=categoria_id,
+            categoria__igreja=igreja,
+            categoria__tipo=CategoriaFinanceira.TIPO_ENTRADA,
         )
+    if membro_id.isdigit():
+        entradas = entradas.filter(membro_id=membro_id, membro__igreja=igreja)
 
-    total_entradas = entradas.aggregate(
-        total=Sum('valor')
-    )['total'] or Decimal('0')
+    total_entradas = entradas.aggregate(total=Sum('valor'))['total'] or Decimal('0')
 
     return render(
         request,
@@ -636,9 +650,21 @@ def entrada_list_view(request):
             'entradas': entradas,
             'pesquisa': pesquisa,
             'total_entradas': total_entradas,
+            'categorias': CategoriaFinanceira.objects.filter(
+                igreja=igreja,
+                tipo=CategoriaFinanceira.TIPO_ENTRADA,
+            ).order_by('nome'),
+            'membros': Membro.objects.filter(igreja=igreja).order_by('nome'),
+            'formas_pagamento': LancamentoFinanceiro.FORMA_PAGAMENTO_CHOICES,
+            'filtros': {
+                'data_inicio': request.GET.get('data_inicio', ''),
+                'data_fim': request.GET.get('data_fim', ''),
+                'forma_pagamento': forma_pagamento,
+                'categoria': categoria_id,
+                'membro': membro_id,
+            },
         }
     )
-
 
 @login_required
 @plano_financeiro_required

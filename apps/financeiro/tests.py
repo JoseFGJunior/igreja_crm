@@ -10,6 +10,7 @@ from apps.financeiro.models import CategoriaFinanceira
 from apps.financeiro.models import LancamentoFinanceiro
 from apps.financeiro.models import FechamentoFinanceiroMensal
 from apps.igrejas.models import Igreja
+from apps.membros.models import Membro
 
 class FinanceiroTestCase(TestCase):
 
@@ -39,6 +40,48 @@ class FinanceiroTestCase(TestCase):
         session = self.client.session
         session['igreja_id'] = self.igreja.id
         session.save()
+
+    def test_entradas_aplica_filtros_combinados(self):
+        categoria = CategoriaFinanceira.objects.create(
+            igreja=self.igreja,
+            nome='Dízimos',
+            tipo=CategoriaFinanceira.TIPO_ENTRADA,
+        )
+        membro = Membro.objects.create(igreja=self.igreja, nome='Maria')
+        entrada_incluida = LancamentoFinanceiro.objects.create(
+            igreja=self.igreja,
+            categoria=categoria,
+            membro=membro,
+            tipo=LancamentoFinanceiro.TIPO_ENTRADA,
+            descricao='Dízimo de setembro',
+            valor=Decimal('250.00'),
+            data=date(2026, 9, 10),
+            forma_pagamento=LancamentoFinanceiro.FORMA_PIX,
+        )
+        LancamentoFinanceiro.objects.create(
+            igreja=self.igreja,
+            categoria=categoria,
+            tipo=LancamentoFinanceiro.TIPO_ENTRADA,
+            descricao='Oferta fora do filtro',
+            valor=Decimal('100.00'),
+            data=date(2026, 8, 10),
+            forma_pagamento=LancamentoFinanceiro.FORMA_DINHEIRO,
+        )
+
+        response = self.client.get(
+            reverse('financeiro_entrada_list'),
+            {
+                'data_inicio': '2026-09-01',
+                'data_fim': '2026-09-30',
+                'categoria': categoria.id,
+                'membro': membro.id,
+                'forma_pagamento': LancamentoFinanceiro.FORMA_PIX,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['entradas']), [entrada_incluida])
+        self.assertEqual(response.context['total_entradas'], Decimal('250.00'))
 
     def test_cria_compra_em_dez_parcelas_mensais(self):
         response = self.client.post(

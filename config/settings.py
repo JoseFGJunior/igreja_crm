@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.financeiro',
     'apps.eventos',
+    'apps.portal',
     
 ]
 

@@ -103,6 +103,10 @@ class Membro(TenantModel):
         related_name='visitantes_responsaveis'
     )
 
+    foto = models.ImageField(upload_to='membros/', blank=True, null=True)
+
+    autoriza_exibir_aniversario_site = models.BooleanField(default=False)
+
     data_nascimento = models.DateField(
         blank=True,
         null=True
