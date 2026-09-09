@@ -68,6 +68,7 @@ def membro_list_view(request):
         return redirect('dashboard')
 
     pesquisa = request.GET.get('q', '').strip()
+    status = request.GET.get('status', '').strip()
 
     membros = Membro.objects.filter(
         igreja=igreja
@@ -79,7 +80,10 @@ def membro_list_view(request):
         membros = membros.filter(
             nome__icontains=pesquisa
         )
+    if status in dict(Membro.STATUS_CHOICES):
+        membros = membros.filter(status=status)
 
+    total_membros = membros.count()
     return render(
         request,
         'membros/membro_list.html',
@@ -87,6 +91,9 @@ def membro_list_view(request):
             'igreja': igreja,
             'membros': membros,
             'pesquisa': pesquisa,
+            'status': status,
+            'status_choices': Membro.STATUS_CHOICES,
+            'total_membros': total_membros,
         }
     )
 

@@ -28,6 +28,21 @@ class PermissaoMembroTestCase(TestCase):
         self.assertEqual(self.client.get(reverse('membro_create')).status_code, 200)
         self.assertEqual(self.client.get(reverse('membro_list')).status_code, 403)
 
+    def test_lista_filtra_por_status_e_preserva_pesquisa_por_nome(self):
+        self.usuario.user_permissions.add(Permission.objects.get(codename='view_membro'))
+        Membro.objects.create(igreja=self.igreja, nome='Maria Membro', status='MEMBRO')
+        Membro.objects.create(igreja=self.igreja, nome='Maria Visitante', status='VISITANTE')
+
+        response = self.client.get(
+            reverse('membro_list'),
+            {'q': 'Maria', 'status': 'MEMBRO'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Maria Membro')
+        self.assertNotContains(response, 'Maria Visitante')
+        self.assertEqual(response.context['status'], 'MEMBRO')
+        self.assertEqual(response.context['total_membros'], 1)
 
 class VisitanteTestCase(TestCase):
     def setUp(self):

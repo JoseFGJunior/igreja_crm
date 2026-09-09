@@ -21,13 +21,19 @@
 
 </div>
 
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted">
+        <strong>{{ total_membros }}</strong> membro{{ total_membros|pluralize }} encontrado{{ total_membros|pluralize }}
+    </span>
+</div>
+
 <div class="card shadow-sm mb-4">
 
     <div class="card-body">
 
         <form method="get" class="row g-2">
 
-            <div class="col-md-10">
+            <div class="col-md-7">
                 <input
                     type="text"
                     name="q"
@@ -37,12 +43,27 @@
                 >
             </div>
 
+            <div class="col-md-3">
+                <select name="status" class="form-select" aria-label="Filtrar por status">
+                    <option value="">Todos os status</option>
+                    {% for codigo, nome in status_choices %}
+                        <option value="{{ codigo }}" {% if status == codigo %}selected{% endif %}>{{ nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <div class="col-md-2 d-grid">
-                <button class="btn btn-outline-primary">
+                <button class="btn btn-outline-primary" type="submit">
                     <i class="bi bi-search"></i>
-                    Pesquisar
+                    Filtrar
                 </button>
             </div>
+
+            {% if pesquisa or status %}
+                <div class="col-12 d-flex justify-content-end">
+                    <a href="{% url 'membro_list' %}" class="btn btn-sm btn-outline-secondary">Limpar filtros</a>
+                </div>
+            {% endif %}
 
         </form>
 
