@@ -3,10 +3,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
 from django.views.generic import RedirectView
+from apps.portal.views import portal_domain_home
 
 
 urlpatterns = [
-    path('', RedirectView.as_view(pattern_name='dashboard', permanent=False), name='portal_domain_home'),
+    path('', portal_domain_home, name='portal_domain_home'),
 
     path(
         'admin/',
