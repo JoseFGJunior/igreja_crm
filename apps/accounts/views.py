@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 from django.contrib.auth import logout
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 
 from django.shortcuts import render
 from django.shortcuts import redirect
@@ -16,7 +17,7 @@ def login_view(request):
 
     if request.method == 'POST':
 
-        username = request.POST.get('username')
+        username = (request.POST.get('username') or '').strip()
         password = request.POST.get('password')
 
         user = authenticate(
@@ -24,6 +25,21 @@ def login_view(request):
             username=username,
             password=password
         )
+
+        # O Django compara o username exatamente como está armazenado.
+        # Resolva também por iexact para que o login não dependa de caixa.
+        if user is None and username:
+            usuario_model = get_user_model()
+            usuario = usuario_model.objects.filter(
+                username__iexact=username,
+                is_active=True,
+            ).first()
+            if usuario and usuario.check_password(password):
+                user = authenticate(
+                    request,
+                    username=usuario.get_username(),
+                    password=password,
+                )
 
         if user is not None:
 

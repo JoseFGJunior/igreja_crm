@@ -1,0 +1,262 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<style>
+    .identify-shell { max-width: 760px; margin: 0 auto; }
+    .camera-preview { width: 100%; max-height: 360px; object-fit: cover; background: #0d1d31; border-radius: 1rem; }
+    .member-result { cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+    .member-result:hover, .member-result.selected { border-color: #0d6efd !important; box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .1); }
+    .member-avatar { width: 52px; height: 52px; object-fit: cover; }
+</style>
+
+<div class="identify-shell">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1"><i class="bi bi-camera me-2"></i>Identificar membro</h4>
+            <span class="text-muted">{{ igreja.nome }}</span>
+        </div>
+        <a href="{% url 'membro_list' %}" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+
+    {% if salvo %}<div class="alert alert-success"><i class="bi bi-check-circle me-1"></i>Foto salva com sucesso.</div>{% endif %}
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <h5 class="mb-1">1. Encontre ou cadastre</h5>
+            <p class="text-muted small">Selecione um membro existente ou cadastre uma pessoa nova antes de tirar a foto.</p>
+            {% if pode_visualizar or pode_alterar %}
+                <form method="get" class="input-group mb-3">
+                    <input type="search" name="q" value="{{ pesquisa }}" class="form-control form-control-lg" placeholder="Buscar membro cadastrado" autofocus>
+                    <button class="btn btn-primary px-4" type="submit"><i class="bi bi-search"></i></button>
+                </form>
+            {% endif %}
+
+            {% if pesquisa %}
+                <div class="d-grid gap-2">
+                    {% for item in membros %}
+                        <button type="button" class="member-result border rounded-3 bg-body p-3 d-flex align-items-center text-start" data-id="{{ item.pk }}" data-nome="{{ item.nome|escapejs }}" data-telefone="{{ item.telefone|default:''|escapejs }}" data-status="{{ item.status }}">
+                            {% if item.foto %}<img src="{{ item.foto.url }}" alt="" class="member-avatar rounded-circle me-3">{% else %}<span class="member-avatar rounded-circle bg-light d-inline-flex align-items-center justify-content-center me-3"><i class="bi bi-person fs-4 text-secondary"></i></span>{% endif %}
+                            <span class="flex-grow-1"><strong class="d-block">{{ item.nome }}</strong><small class="text-muted">{{ item.get_status_display }}{% if item.telefone %} · {{ item.telefone }}{% endif %}</small></span>
+                            <span class="btn btn-sm btn-outline-primary">Selecionar</span>
+                        </button>
+                    {% empty %}
+                        <div class="alert alert-light border mb-0">Nenhum membro encontrado com esse nome.</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if pode_adicionar %}
+                <button type="button" id="new-member" class="btn btn-outline-primary w-100 mt-3"><i class="bi bi-person-plus me-2"></i>Cadastrar novo membro</button>
+            {% endif %}
+            <div id="selection-label" class="small text-success mt-2{% if not membro_selecionado %} d-none{% endif %}"><i class="bi bi-check-circle me-1"></i><span>{% if membro_selecionado %}{{ membro_selecionado.nome }} selecionado{% endif %}</span></div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="mb-1">2. Tire a foto</h5>
+            <p class="text-muted small">Permita o acesso à câmera e posicione o rosto no centro da imagem.</p>
+            <form method="post" enctype="multipart/form-data" id="identify-form">
+                {% csrf_token %}
+                <input type="hidden" name="membro_id" id="membro-id" value="{% if membro_selecionado %}{{ membro_selecionado.pk }}{% endif %}">
+                <input type="hidden" name="foto_capturada" id="foto-capturada">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6"><label class="form-label">Nome completo</label>{{ form.nome }}{{ form.nome.errors }}</div>
+                    <div class="col-md-6"><label class="form-label">Telefone</label>{{ form.telefone }}{{ form.telefone.errors }}</div>
+                    <div class="col-md-6"><label class="form-label">Status</label>{{ form.status }}{{ form.status.errors }}</div>
+                    <div class="col-12"><div class="form-check">{{ form.autoriza_exibir_aniversario_site }} <label class="form-check-label" for="id_autoriza_exibir_aniversario_site">Autoriza exibir foto e nome no aniversário do dia no site público</label></div>{{ form.autoriza_exibir_aniversario_site.errors }}</div>
+                </div>
+
+                <video id="camera-video" class="camera-preview d-none" autoplay playsinline></video>
+                <canvas id="camera-canvas" class="d-none"></canvas>
+                <img id="photo-preview" class="camera-preview d-none mb-3" alt="Prévia da foto">
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <button type="button" id="open-camera" class="btn btn-primary"><i class="bi bi-camera me-1"></i>Abrir câmera</button>
+                    <button type="button" id="capture-photo" class="btn btn-success d-none"><i class="bi bi-circle me-1"></i>Capturar foto</button>
+                    <button type="button" id="switch-camera" class="btn btn-outline-secondary d-none"><i class="bi bi-arrow-repeat me-1"></i>Virar câmera</button>
+                </div>
+                <div id="camera-mode" class="small text-muted mb-3"></div>
+                <label for="id_foto" class="form-label">Ou escolher uma foto da galeria</label>
+                {{ form.foto }}
+                {{ form.foto.errors }}
+                <div id="camera-error" class="small text-danger mb-3"></div>
+                <button type="submit" class="btn btn-success btn-lg w-100"><i class="bi bi-check-circle me-1"></i>Salvar membro</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    const form = document.getElementById('identify-form');
+    const memberId = document.getElementById('membro-id');
+    const nameInput = document.getElementById('id_nome');
+    const phoneInput = document.getElementById('id_telefone');
+    const statusInput = document.getElementById('id_status');
+    const selection = document.getElementById('selection-label');
+    const selectionText = selection?.querySelector('span');
+    const fileInput = document.getElementById('id_foto');
+    const video = document.getElementById('camera-video');
+    const canvas = document.getElementById('camera-canvas');
+    const preview = document.getElementById('photo-preview');
+    const openCamera = document.getElementById('open-camera');
+    const capturePhoto = document.getElementById('capture-photo');
+    const switchCamera = document.getElementById('switch-camera');
+    const cameraMode = document.getElementById('camera-mode');
+    let stream;
+    let facingMode = 'environment';
+
+    const getCameraStream = async () => {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            throw new Error('unsupported');
+        }
+
+        const constraints = facingMode === 'environment'
+            ? [
+                {video: {facingMode: {exact: 'environment'}}, audio: false},
+                {video: {facingMode: {ideal: 'environment'}}, audio: false},
+                {video: true, audio: false},
+            ]
+            : [
+                {video: {facingMode: {exact: 'user'}}, audio: false},
+                {video: {facingMode: {ideal: 'user'}}, audio: false},
+                {video: true, audio: false},
+            ];
+
+        let lastError;
+        for (const constraint of constraints) {
+            try {
+                return await navigator.mediaDevices.getUserMedia(constraint);
+            } catch (error) {
+                lastError = error;
+            }
+        }
+        throw lastError || new Error('camera-unavailable');
+    };
+
+    const startCamera = async () => {
+        stream?.getTracks().forEach((track) => track.stop());
+        stream = await getCameraStream();
+        video.srcObject = stream;
+        video.classList.remove('d-none');
+        capturePhoto.classList.remove('d-none');
+        switchCamera.classList.remove('d-none');
+        openCamera.classList.add('d-none');
+        cameraMode.textContent = facingMode === 'environment' ? 'Câmera traseira ativa' : 'Câmera frontal ativa';
+    };
+
+    document.querySelectorAll('.member-result').forEach((button) => {
+        button.addEventListener('click', () => {
+            memberId.value = button.dataset.id;
+            nameInput.value = button.dataset.nome;
+            phoneInput.value = button.dataset.telefone;
+            statusInput.value = button.dataset.status;
+            selection.classList.remove('d-none');
+            selectionText.textContent = `${button.dataset.nome} selecionado`;
+            document.querySelectorAll('.member-result').forEach((item) => item.classList.remove('selected'));
+            button.classList.add('selected');
+            nameInput.focus();
+        });
+    });
+
+    document.getElementById('new-member')?.addEventListener('click', () => {
+        memberId.value = '';
+        nameInput.value = '';
+        phoneInput.value = '';
+        statusInput.value = 'MEMBRO';
+        selection.classList.add('d-none');
+        nameInput.focus();
+    });
+
+    openCamera?.addEventListener('click', async () => {
+        const error = document.getElementById('camera-error');
+        try {
+            await startCamera();
+            error.textContent = '';
+        } catch (err) {
+            if (err.message === 'unsupported' || !window.isSecureContext) {
+                error.textContent = 'A câmera exige HTTPS ou acesso por localhost. Use a galeria se necessário.';
+            } else if (err.name === 'NotAllowedError') {
+                error.textContent = 'Permita o acesso à câmera nas configurações do navegador e tente novamente.';
+            } else if (err.name === 'NotFoundError') {
+                error.textContent = 'Nenhuma câmera foi encontrada neste dispositivo.';
+            } else {
+                error.textContent = 'Não foi possível abrir a câmera. Use o botão de escolher uma foto.';
+            }
+        }
+    });
+
+    switchCamera?.addEventListener('click', async () => {
+        const error = document.getElementById('camera-error');
+        const previousFacingMode = facingMode;
+        const nextFacingMode = facingMode === 'environment' ? 'user' : 'environment';
+        try {
+            const track = stream?.getVideoTracks?.()[0];
+            if (track?.applyConstraints) {
+                await track.applyConstraints({facingMode: {exact: nextFacingMode}});
+                facingMode = nextFacingMode;
+                cameraMode.textContent = facingMode === 'environment' ? 'Câmera traseira ativa' : 'Câmera frontal ativa';
+            } else {
+                facingMode = nextFacingMode;
+                await startCamera();
+            }
+            error.textContent = '';
+        } catch (err) {
+            facingMode = previousFacingMode;
+            try {
+                await startCamera();
+                error.textContent = 'Este dispositivo não permitiu virar a câmera.';
+            } catch (restartError) {
+                video.classList.add('d-none');
+                capturePhoto.classList.add('d-none');
+                switchCamera.classList.add('d-none');
+                openCamera.classList.remove('d-none');
+                error.textContent = 'Não foi possível alternar a câmera. Abra a câmera novamente ou escolha uma foto da galeria.';
+            }
+        }
+    });
+
+    capturePhoto?.addEventListener('click', () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        canvas.toBlob((blob) => {
+            const file = new File([blob], 'foto-membro.jpg', {type: 'image/jpeg'});
+            document.getElementById('foto-capturada').value = canvas.toDataURL('image/jpeg', 0.88);
+            try {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+            } catch (err) {
+                // O servidor também recebe a captura pelo campo foto_capturada.
+            }
+            preview.src = URL.createObjectURL(blob);
+            preview.classList.remove('d-none');
+            stream?.getTracks().forEach((track) => track.stop());
+            video.classList.add('d-none');
+            capturePhoto.classList.add('d-none');
+            switchCamera.classList.add('d-none');
+            openCamera.classList.remove('d-none');
+            cameraMode.textContent = '';
+        }, 'image/jpeg', 0.88);
+    });
+
+    fileInput?.addEventListener('change', () => {
+        if (fileInput.files?.[0]) {
+            document.getElementById('foto-capturada').value = '';
+            preview.src = URL.createObjectURL(fileInput.files[0]);
+            preview.classList.remove('d-none');
+        }
+    });
+
+    form.addEventListener('submit', (event) => {
+        if (!memberId.value && !nameInput.value.trim()) {
+            event.preventDefault();
+            nameInput.focus();
+        }
+    });
+})();
+</script>
+{% endblock %}

@@ -138,10 +138,11 @@
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead><tr><th>Nome</th><th>Data</th><th>WhatsApp</th><th class="text-end">Ação</th></tr></thead>
+                <thead><tr><th>Foto</th><th>Nome</th><th>Data</th><th>WhatsApp</th><th class="text-end">Ação</th></tr></thead>
                 <tbody>
                     {% for membro in aniversariantes_hoje %}
                         <tr>
+                            <td>{% if membro.foto %}<img src="{{ membro.foto.url }}" alt="Foto de {{ membro.nome }}" class="rounded-circle object-fit-cover" width="44" height="44">{% else %}<span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light text-secondary" style="width:44px;height:44px"><i class="bi bi-person"></i></span>{% endif %}</td>
                             <td>{{ membro.nome }}</td>
                             <td>{{ membro.data_nascimento|date:"d/m" }}</td>
                             <td>{{ membro.telefone|default:"-" }}</td>
@@ -156,7 +157,7 @@
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="4" class="text-center text-muted py-4">Nenhum aniversariante hoje.</td></tr>
+                        <tr><td colspan="5" class="text-center text-muted py-4">Nenhum aniversariante hoje.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -278,6 +279,7 @@
 
                         <thead>
                             <tr>
+                                <th>Foto</th>
                                 <th>Nome</th>
                                 <th>Status</th>
                                 <th>Data</th>
@@ -290,6 +292,7 @@
                             {% for membro in aniversariantes_mes %}
 
                                 <tr>
+                                    <td>{% if membro.foto %}<img src="{{ membro.foto.url }}" alt="Foto de {{ membro.nome }}" class="rounded-circle object-fit-cover" width="40" height="40">{% else %}<span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light text-secondary" style="width:40px;height:40px"><i class="bi bi-person"></i></span>{% endif %}</td>
                                     <td>{{ membro.nome }}</td>
                                     <td>{{ membro.get_status_display }}</td>
                                     <td>{{ membro.data_nascimento|date:"d/m" }}</td>
@@ -299,7 +302,7 @@
                             {% empty %}
 
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">
+                                    <td colspan="5" class="text-center text-muted py-4">
                                         Nenhum aniversariante neste mes.
                                     </td>
                                 </tr>
@@ -334,6 +337,7 @@
 
                         <thead>
                             <tr>
+                                <th>Foto</th>
                                 <th>Nome</th>
                                 <th>Status</th>
                                 <th>Data</th>
@@ -346,6 +350,7 @@
                             {% for membro in aniversariantes_semana %}
 
                                 <tr>
+                                    <td>{% if membro.foto %}<img src="{{ membro.foto.url }}" alt="Foto de {{ membro.nome }}" class="rounded-circle object-fit-cover" width="40" height="40">{% else %}<span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light text-secondary" style="width:40px;height:40px"><i class="bi bi-person"></i></span>{% endif %}</td>
                                     <td>{{ membro.nome }}</td>
                                     <td>{{ membro.get_status_display }}</td>
                                     <td>{{ membro.data_nascimento|date:"d/m" }}</td>
@@ -355,7 +360,7 @@
                             {% empty %}
 
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">
+                                    <td colspan="5" class="text-center text-muted py-4">
                                         Nenhum aniversariante nesta semana.
                                     </td>
                                 </tr>

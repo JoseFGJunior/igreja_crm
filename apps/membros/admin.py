@@ -12,6 +12,7 @@ class MembroAdmin(admin.ModelAdmin):
         'nome',
         'status',
         'telefone',
+        'autoriza_exibir_aniversario_site',
         'necessita_cuidado_especial',
         'prioridade_cuidado',
     )
@@ -19,6 +20,7 @@ class MembroAdmin(admin.ModelAdmin):
         'igreja',
         'status',
         'necessita_cuidado_especial',
+        'autoriza_exibir_aniversario_site',
         'prioridade_cuidado',
     )
     search_fields = (

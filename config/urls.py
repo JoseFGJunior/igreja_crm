@@ -39,6 +39,11 @@ urlpatterns = [
         include('apps.eventos.urls')
     ),
 
+    path(
+        'api/mobile/v1/',
+        include('apps.mobile.urls')
+    ),
+
     path('<slug:slug>/', include('apps.portal.urls')),
 
 ]

@@ -57,4 +57,30 @@ class ChangePasswordTests(TestCase):
             '/accounts/login/?next=/accounts/alterar-senha/'
         )
 
+
+class LoginTests(TestCase):
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='UsuarioTeste',
+            password='SenhaSegura123!'
+        )
+
+    def test_login_aceita_usuario_em_minusculas(self):
+        response = self.client.post('/accounts/login/', {
+            'username': 'usuarioteste',
+            'password': 'SenhaSegura123!',
+        })
+
+        self.assertRedirects(response, '/dashboard/')
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.user.pk)
+
+    def test_login_aceita_usuario_em_maiusculas(self):
+        response = self.client.post('/accounts/login/', {
+            'username': 'USUARIOTESTE',
+            'password': 'SenhaSegura123!',
+        })
+
+        self.assertRedirects(response, '/dashboard/')
+
 # Create your tests here.

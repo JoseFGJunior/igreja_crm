@@ -1,4 +1,5 @@
 {% extends 'base/base.html' %}
+{% load financeiro_tags %}
 
 {% block content %}
 
@@ -41,7 +42,7 @@
                 </h6>
 
                 <h2 class="text-success">
-                    R$ {{ total_entradas|floatformat:2 }}
+                    R$ {{ total_entradas|brl }}
                 </h2>
 
             </div>
@@ -101,7 +102,7 @@
                         <td>{{ entrada.membro.nome|default:"-" }}</td>
                         <td>{{ entrada.get_forma_pagamento_display }}</td>
                         <td class="text-end text-success">
-                            R$ {{ entrada.valor|floatformat:2 }}
+                            R$ {{ entrada.valor|brl }}
                         </td>
                         <td class="text-end">
                             {% if perms.financeiro.change_lancamentofinanceiro %}<a

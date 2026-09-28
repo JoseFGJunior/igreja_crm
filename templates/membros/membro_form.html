@@ -25,7 +25,7 @@
 
     <div class="card-body">
 
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
 
             {% csrf_token %}
 
@@ -72,6 +72,29 @@
                             <label class="form-label">Status</label>
                             {{ form.status }}
                             {{ form.status.errors }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Foto do membro</label>
+                            {{ form.foto }}
+                            <div class="form-text">JPG, PNG ou WebP. Use uma foto nítida para facilitar a identificação.</div>
+                            {{ form.foto.errors }}
+                            {% if membro.foto %}
+                                <div class="mt-2 d-flex align-items-center gap-2">
+                                    <img src="{{ membro.foto.url }}" alt="Foto de {{ membro.nome }}" class="rounded-circle object-fit-cover" width="72" height="72">
+                                    <span class="small text-muted">Foto atual. Marque a caixa acima para removê-la.</span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check mt-4">
+                                {{ form.autoriza_exibir_aniversario_site }}
+                                <label class="form-check-label">
+                                    Autoriza exibir foto e nome no aniversário do dia no site público
+                                </label>
+                            </div>
+                            {{ form.autoriza_exibir_aniversario_site.errors }}
                         </div>
 
                         <div class="col-md-6">

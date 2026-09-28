@@ -1,20 +1,28 @@
 from datetime import timedelta
+from base64 import b64decode
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied
+from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 
 from apps.accounts.models import UsuarioIgreja
+from apps.membros.forms import IdentificacaoMembroForm
 from apps.membros.forms import MembroForm
 from apps.membros.forms import MensagemWhatsAppVisitanteForm
 from apps.membros.forms import VisitanteForm
+from apps.membros.forms import PedidoOracaoForm
 from apps.membros.models import AcompanhamentoVisitante
 from apps.membros.models import MensagemWhatsAppVisitante
 from apps.membros.models import Membro
 from apps.membros.models import VisitaVisitante
+from apps.mobile.models import PedidoOracao
 from apps.core.models import MensagemAniversario
 from apps.membros.services import criar_jornada_visitante
 from apps.membros.services import normalizar_whatsapp
@@ -58,6 +66,75 @@ def get_igreja_selecionada(request):
         return relacao.igreja
     return None
 
+
+
+def _pode_pedidos_oracao(request, acao='view'):
+    permissao_membros = {'view': 'view_membro', 'add': 'add_membro', 'change': 'change_membro', 'delete': 'delete_membro'}[acao]
+    return (request.user.has_perm(f'mobile.{acao}_pedidooracao') or request.user.has_perm(f'membros.{permissao_membros}'))
+
+
+@login_required
+def pedido_oracao_list_view(request):
+    if not _pode_pedidos_oracao(request): raise PermissionDenied
+    igreja = get_igreja_selecionada(request)
+    if igreja is None: return redirect('dashboard')
+    pesquisa = request.GET.get('q', '').strip(); status = request.GET.get('status', '').strip()
+    pedidos = PedidoOracao.objects.filter(igreja=igreja)
+    if pesquisa:
+        pedidos = pedidos.filter(nome__icontains=pesquisa) | PedidoOracao.objects.filter(igreja=igreja, telefone__icontains=pesquisa) | PedidoOracao.objects.filter(igreja=igreja, pedido__icontains=pesquisa)
+    if status == 'pendentes': pedidos = pedidos.filter(atendido=False)
+    elif status == 'atendidos': pedidos = pedidos.filter(atendido=True)
+    pedidos = pedidos.order_by('-criado_em', '-id').distinct()
+    return render(request, 'membros/pedido_oracao_list.html', {'igreja': igreja, 'pedidos': pedidos, 'pesquisa': pesquisa, 'status': status, 'total_pedidos': pedidos.count()})
+
+
+@login_required
+def pedido_oracao_create_view(request):
+    if not _pode_pedidos_oracao(request, 'add'): raise PermissionDenied
+    igreja = get_igreja_selecionada(request)
+    if igreja is None: return redirect('dashboard')
+    form = PedidoOracaoForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        pedido = form.save(commit=False); pedido.igreja = igreja; pedido.save()
+        messages.success(request, 'Pedido de oração cadastrado com sucesso.')
+        return redirect('pedido_oracao_list')
+    return render(request, 'membros/pedido_oracao_form.html', {'form': form, 'igreja': igreja, 'titulo': 'Novo pedido de oração'})
+
+
+@login_required
+def pedido_oracao_update_view(request, pk):
+    if not _pode_pedidos_oracao(request, 'change'): raise PermissionDenied
+    igreja = get_igreja_selecionada(request)
+    if igreja is None: return redirect('dashboard')
+    pedido = get_object_or_404(PedidoOracao, pk=pk, igreja=igreja)
+    form = PedidoOracaoForm(request.POST or None, instance=pedido)
+    if request.method == 'POST' and form.is_valid():
+        form.save(); messages.success(request, 'Pedido de oração atualizado com sucesso.')
+        return redirect('pedido_oracao_list')
+    return render(request, 'membros/pedido_oracao_form.html', {'form': form, 'igreja': igreja, 'pedido': pedido, 'titulo': 'Editar pedido de oração'})
+
+
+@login_required
+def pedido_oracao_toggle_view(request, pk):
+    if not _pode_pedidos_oracao(request, 'change') or request.method != 'POST': raise PermissionDenied
+    igreja = get_igreja_selecionada(request)
+    if igreja is None: return redirect('dashboard')
+    pedido = get_object_or_404(PedidoOracao, pk=pk, igreja=igreja); pedido.atendido = not pedido.atendido
+    pedido.save(update_fields=('atendido', 'updated_at'))
+    messages.success(request, 'Pedido marcado como atendido.' if pedido.atendido else 'Pedido voltou para pendentes.')
+    return redirect('pedido_oracao_list')
+
+
+@login_required
+def pedido_oracao_delete_view(request, pk):
+    if not _pode_pedidos_oracao(request, 'delete'): raise PermissionDenied
+    igreja = get_igreja_selecionada(request)
+    if igreja is None: return redirect('dashboard')
+    pedido = get_object_or_404(PedidoOracao, pk=pk, igreja=igreja)
+    if request.method == 'POST':
+        pedido.delete(); messages.success(request, 'Pedido de oração excluído.')
+        return redirect('pedido_oracao_list')
+    return render(request, 'membros/pedido_oracao_confirm_delete.html', {'igreja': igreja, 'pedido': pedido})
 
 @login_required
 @permission_required('membros.view_membro', raise_exception=True)
@@ -106,7 +183,7 @@ def membro_create_view(request):
     if igreja is None:
         return redirect('dashboard')
 
-    form = MembroForm(request.POST or None)
+    form = MembroForm(request.POST or None, request.FILES or None)
 
     if request.method == 'POST' and form.is_valid():
         membro = form.save(commit=False)
@@ -142,6 +219,7 @@ def membro_update_view(request, pk):
 
     form = MembroForm(
         request.POST or None,
+        request.FILES or None,
         instance=membro
     )
 
@@ -160,6 +238,81 @@ def membro_update_view(request, pk):
             'titulo': 'Editar membro',
         }
     )
+
+
+@login_required
+def identificar_membro_view(request):
+    igreja = get_igreja_selecionada(request)
+
+    if igreja is None:
+        return redirect('dashboard')
+
+    pode_adicionar = request.user.has_perm('membros.add_membro')
+    pode_visualizar = request.user.has_perm('membros.view_membro')
+    pode_alterar = request.user.has_perm('membros.change_membro')
+    if not (pode_adicionar or pode_alterar):
+        raise PermissionDenied
+
+    membro_id = request.POST.get('membro_id', '').strip() if request.method == 'POST' else ''
+    membro = None
+    if membro_id.isdigit():
+        membro = Membro.objects.filter(igreja=igreja, pk=membro_id).first()
+        if membro is None:
+            raise PermissionDenied
+        if not pode_alterar:
+            raise PermissionDenied
+
+    if request.method == 'POST' and membro is None and not pode_adicionar:
+        raise PermissionDenied
+
+    form = IdentificacaoMembroForm(
+        request.POST or None,
+        request.FILES or None,
+        instance=membro,
+    )
+    pesquisa = request.GET.get('q', '').strip()
+    membros = Membro.objects.filter(igreja=igreja).order_by('nome')
+    if pesquisa and (pode_visualizar or pode_alterar):
+        membros = membros.filter(nome__icontains=pesquisa)
+    else:
+        membros = membros.none()
+
+    if request.method == 'POST' and form.is_valid():
+        registro = form.save(commit=False)
+        registro.igreja = igreja
+        foto_capturada = request.POST.get('foto_capturada', '')
+        if foto_capturada.startswith('data:image/') and ',' in foto_capturada:
+            cabecalho, conteudo = foto_capturada.split(',', 1)
+            extensao = {
+                'data:image/jpeg;base64': 'jpg',
+                'data:image/png;base64': 'png',
+                'data:image/webp;base64': 'webp',
+            }.get(cabecalho)
+            if extensao:
+                try:
+                    dados_foto = b64decode(conteudo, validate=True)
+                except (ValueError, TypeError):
+                    dados_foto = b''
+                if dados_foto and len(dados_foto) <= 10 * 1024 * 1024:
+                    registro.foto.save(
+                        f'foto-capturada.{extensao}',
+                        ContentFile(dados_foto),
+                        save=False,
+                    )
+        registro.save()
+        return redirect(f'{reverse("identificar_membro")}?salvo=1')
+
+    return render(request, 'membros/identificar_membro.html', {
+        'igreja': igreja,
+        'form': form,
+        'membros': membros,
+        'pesquisa': pesquisa,
+        'membro_selecionado': membro,
+        'pode_adicionar': pode_adicionar,
+        'pode_visualizar': pode_visualizar,
+        'pode_alterar': pode_alterar,
+        'salvo': request.GET.get('salvo') == '1',
+    })
 
 
 @login_required

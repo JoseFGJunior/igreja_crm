@@ -18,6 +18,12 @@
         <i class="bi bi-plus-lg"></i>
         Novo membro
     </a>
+    {% if perms.membros.add_membro or perms.membros.change_membro %}
+        <a href="{% url 'identificar_membro' %}" class="btn btn-outline-primary">
+            <i class="bi bi-camera"></i>
+            Identificar por foto
+        </a>
+    {% endif %}
 
 </div>
 
@@ -79,6 +85,7 @@
 
             <thead>
                 <tr>
+                    <th>Foto</th>
                     <th>Nome</th>
                     <th>Status</th>
                     <th>Telefone</th>
@@ -94,6 +101,15 @@
                 {% for membro in membros %}
 
                     <tr>
+                        <td>
+                            {% if membro.foto %}
+                                <img src="{{ membro.foto.url }}" alt="Foto de {{ membro.nome }}" class="rounded-circle object-fit-cover" width="44" height="44">
+                            {% else %}
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light text-secondary" style="width: 44px; height: 44px;" title="Sem foto">
+                                    <i class="bi bi-person fs-5"></i>
+                                </span>
+                            {% endif %}
+                        </td>
                         <td>{{ membro.nome }}</td>
                         <td>{{ membro.get_status_display }}</td>
                         <td>{{ membro.telefone|default:"-" }}</td>
@@ -134,7 +150,7 @@
                 {% empty %}
 
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="8" class="text-center text-muted py-4">
                             Nenhum membro encontrado.
                         </td>
                     </tr>

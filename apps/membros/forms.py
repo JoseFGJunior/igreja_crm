@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 
 from apps.membros.models import MensagemWhatsAppVisitante, Membro
+from apps.mobile.models import PedidoOracao
 from apps.membros.services import normalizar_whatsapp
 from apps.accounts.models import UsuarioIgreja
 
@@ -20,6 +21,8 @@ class MembroForm(forms.ModelForm):
         model = Membro
         fields = (
             'nome',
+            'foto',
+            'autoriza_exibir_aniversario_site',
             'email',
             'telefone',
             'data_nascimento',
@@ -38,6 +41,13 @@ class MembroForm(forms.ModelForm):
         )
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'foto': forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/jpeg,image/png,image/webp',
+            }),
+            'autoriza_exibir_aniversario_site': forms.CheckboxInput(
+                attrs={'class': 'form-check-input'}
+            ),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'telefone': forms.TextInput(attrs={'class': 'form-control'}),
             'data_nascimento': forms.DateInput(
@@ -89,6 +99,35 @@ class MembroForm(forms.ModelForm):
         tipos = self.cleaned_data.get('tipo_cuidado_especial') or []
 
         return ','.join(tipos)
+
+
+class IdentificacaoMembroForm(forms.ModelForm):
+    class Meta:
+        model = Membro
+        fields = (
+            'nome', 'telefone', 'status', 'foto',
+            'autoriza_exibir_aniversario_site',
+        )
+        widgets = {
+            'nome': forms.TextInput(attrs={
+                'class': 'form-control form-control-lg',
+                'placeholder': 'Nome completo',
+                'autocomplete': 'name',
+            }),
+            'telefone': forms.TextInput(attrs={
+                'class': 'form-control form-control-lg',
+                'placeholder': '(00) 00000-0000',
+                'autocomplete': 'tel',
+            }),
+            'status': forms.Select(attrs={'class': 'form-select form-select-lg'}),
+            'foto': forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*',
+            }),
+            'autoriza_exibir_aniversario_site': forms.CheckboxInput(
+                attrs={'class': 'form-check-input'}
+            ),
+        }
 
 
 class VisitanteForm(forms.ModelForm):
@@ -168,3 +207,15 @@ class MensagemWhatsAppVisitanteForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['tipo'].disabled = True
+
+class PedidoOracaoForm(forms.ModelForm):
+
+    class Meta:
+        model = PedidoOracao
+        fields = ('nome', 'telefone', 'pedido', 'atendido')
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'name'}),
+            'telefone': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'tel'}),
+            'pedido': forms.Textarea(attrs={'class': 'form-control', 'rows': 6}),
+            'atendido': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }

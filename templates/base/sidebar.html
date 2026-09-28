@@ -16,12 +16,13 @@
                         <a href="{% url 'dashboard' %}" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Painel de Controle</a>
                         {% if perms.membros.view_membro or perms.membros.add_membro or perms.membros.change_membro or perms.membros.delete_membro %}
                             <a href="{% if perms.membros.view_membro %}{% url 'membro_list' %}{% else %}{% url 'membro_create' %}{% endif %}" class="nav-link text-white"><i class="bi bi-people"></i> Membros</a>
+                            {% if perms.membros.add_membro or perms.membros.change_membro %}<a href="{% url 'identificar_membro' %}" class="nav-link text-white"><i class="bi bi-camera"></i> Identificar por foto</a>{% endif %}
                         {% endif %}
                     </div>
                 </details>
             </li>
 
-            {% if perms.membros.view_membro or perms.membros.add_membro or perms.membros.change_membro %}
+            {% if perms.membros.view_membro or perms.membros.add_membro or perms.membros.change_membro or perms.mobile.view_pedidooracao %}
                 <li class="nav-item">
                     <details class="sidebar-section" open>
                         <summary class="nav-link sidebar-section-toggle text-white"><i class="bi bi-people-fill"></i> Gestão de Pessoas</summary>
@@ -29,6 +30,7 @@
                             <a href="{% if perms.membros.view_membro %}{% url 'visitante_dashboard' %}{% else %}{% url 'visitante_create' %}{% endif %}" class="nav-link text-white"><i class="bi bi-person-plus"></i> Visitantes</a>
                             {% if perms.membros.view_membro %}<a href="{% url 'visitante_acompanhamentos' %}" class="nav-link text-white"><i class="bi bi-clipboard-check"></i> Acompanhamentos</a>{% endif %}
                             {% if perms.membros.change_membro %}<a href="{% url 'visitante_mensagens' %}" class="nav-link text-white"><i class="bi bi-whatsapp"></i> Mensagens do WhatsApp</a>{% endif %}
+                            {% if perms.membros.view_membro or perms.mobile.view_pedidooracao %}<a href="{% url 'pedido_oracao_list' %}" class="nav-link text-white"><i class="bi bi-heart-pulse"></i> Pedidos de oração</a>{% endif %}
                         </div>
                     </details>
                 </li>

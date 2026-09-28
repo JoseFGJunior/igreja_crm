@@ -49,9 +49,20 @@ DEBUG = config(
 
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS',
+    default='127.0.0.1,localhost,192.168.0.102',
+    cast=Csv()
+)
+
+if DEBUG and '192.168.0.102' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('192.168.0.102')
+
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
     default='',
     cast=Csv()
 )
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
@@ -70,11 +81,13 @@ INSTALLED_APPS = [
     'apps.financeiro',
     'apps.eventos',
     'apps.portal',
+    'apps.mobile',
     
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -168,6 +181,15 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 MEDIA_URL = 'media/'
 
