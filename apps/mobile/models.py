@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from apps.core.models import TenantModel
 
 class ConfiguracaoApp(TenantModel):
@@ -65,3 +66,35 @@ class PedidoOracao(TenantModel):
 
     def __str__(self):
         return f'{self.nome or "Anônimo"} · {self.criado_em:%d/%m/%Y %H:%M}'
+
+class PushSubscription(TenantModel):
+    endpoint = models.URLField(max_length=2000, unique=True)
+    p256dh = models.TextField()
+    auth = models.TextField()
+    user_agent = models.TextField(blank=True)
+    ativo = models.BooleanField(default=True)
+    ultimo_uso_em = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Inscrição de notificação push'
+        verbose_name_plural = 'Inscrições de notificações push'
+        ordering = ('-updated_at',)
+
+    def __str__(self):
+        return f'{self.igreja} · {self.endpoint[:60]}'
+class MensagemApp(TenantModel):
+    data = models.DateField(default=timezone.localdate)
+    titulo = models.CharField(max_length=200)
+    descricao = models.TextField(blank=True)
+    youtube_url = models.URLField()
+    imagem = models.ImageField(upload_to='mobile/mensagens/', blank=True, null=True)
+    ordem = models.PositiveIntegerField(default=0)
+    ativo = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Mensagem do dia do app'
+        verbose_name_plural = 'Mensagens do dia do app'
+        ordering = ('data', 'ordem', '-created_at')
+
+    def __str__(self):
+        return self.titulo

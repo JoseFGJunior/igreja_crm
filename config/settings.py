@@ -62,6 +62,10 @@ CSRF_TRUSTED_ORIGINS = config(
     cast=Csv()
 )
 
+PUSH_VAPID_PUBLIC_KEY = config('PUSH_VAPID_PUBLIC_KEY', default='')
+PUSH_VAPID_PRIVATE_KEY = config('PUSH_VAPID_PRIVATE_KEY', default='')
+PUSH_VAPID_CLAIMS_EMAIL = config('PUSH_VAPID_CLAIMS_EMAIL', default='mailto:admin@eloperfeito.com.br')
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 

@@ -1,4 +1,4 @@
 from django.urls import path
 from . import views
 app_name = 'mobile_api'
-urlpatterns = [path('home/', views.home, name='home'), path('palavra-do-dia/', views.palavra_do_dia, name='palavra-do-dia'), path('prototipo/', views.prototipo, name='prototipo'), path('pedidos-oracao/', views.pedidos_oracao, name='pedidos-oracao')]
+urlpatterns = [path('home/', views.home, name='home'), path('eventos/', views.eventos, name='eventos'), path('pix/qr-code/', views.pix_qr_code, name='pix-qr-code'), path('palavra-do-dia/', views.palavra_do_dia, name='palavra-do-dia'), path('prototipo/', views.prototipo, name='prototipo'), path('pedidos-oracao/', views.pedidos_oracao, name='pedidos-oracao'), path('push/public-key/', views.push_public_key, name='push-public-key'), path('push/subscribe/', views.push_subscribe, name='push-subscribe'), path('push/unsubscribe/', views.push_unsubscribe, name='push-unsubscribe')]

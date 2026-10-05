@@ -54,3 +54,31 @@ class MobileApiTests(TestCase):
         response = self.client.post('/api/mobile/v1/pedidos-oracao/', data={'nome': 'Maria'}, content_type='application/json')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(PedidoOracao.objects.count(), 0)
+    def test_home_uses_requested_tenant(self):
+        ConfiguracaoApp.objects.create(igreja=self.outra, ativo=True, nome_exibicao='Outra Igreja App')
+        PalavraDoDia.objects.create(
+            igreja=self.outra,
+            data=date.today(),
+            titulo='Palavra da Outra',
+            status=PalavraDoDia.STATUS_APROVADO,
+            publicado=True,
+        )
+
+        response = self.client.get('/api/mobile/v1/home/?tenant=outra')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['igreja']['nome_exibicao'], 'Outra Igreja App')
+        self.assertEqual(response.json()['palavra_dia']['titulo'], 'Palavra da Outra')
+
+    def test_pedido_de_oracao_uses_requested_tenant(self):
+        ConfiguracaoApp.objects.create(igreja=self.outra, ativo=True, nome_exibicao='Outra Igreja App')
+
+        response = self.client.post('/api/mobile/v1/pedidos-oracao/', data={
+            'tenant': 'outra',
+            'nome': 'João',
+            'telefone': '(81) 98888-7777',
+            'pedido': 'Pedido da outra igreja.',
+        }, content_type='application/json')
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(PedidoOracao.objects.get().igreja, self.outra)

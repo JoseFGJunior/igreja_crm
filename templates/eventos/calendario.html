@@ -3,10 +3,10 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div><h4 class="mb-1">Eventos</h4><span class="text-muted">{{ igreja.nome }}</span></div>
-    <a href="{% url 'evento_create' %}" class="btn btn-success"><i class="bi bi-plus-lg"></i> Novo evento</a>
+    <div class="d-flex gap-2"><a href="{% url 'evento_importar' %}" class="btn btn-outline-primary"><i class="bi bi-upload"></i> Importar Excel</a><a href="{% url 'evento_create' %}" class="btn btn-success"><i class="bi bi-plus-lg"></i> Novo evento</a></div>
 </div>
 
-<div class="card shadow-sm mb-4"><div class="card-body">
+{% if request.GET.importados %}<div class="alert alert-success">Importação concluída: {{ request.GET.importados }} evento(s) criado(s).{% if request.GET.ignorados %} {{ request.GET.ignorados }} duplicado(s) ignorado(s).{% endif %}</div>{% endif %}<div class="card shadow-sm mb-4"><div class="card-body">
     <h5 class="mb-3">Exportar eventos por período</h5>
     <form method="get" class="row g-3 align-items-end">
         <div class="col-md-4"><label for="data_inicio" class="form-label">Data inicial</label><input type="date" id="data_inicio" name="data_inicio" value="{{ data_inicio }}" class="form-control" required></div>
@@ -14,7 +14,7 @@
         <div class="col-md-4 d-flex gap-2"><button type="submit" class="btn btn-outline-primary">Listar período</button>{% if filtro_valido %}<a href="{% url 'eventos_exportar_excel' %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}" class="btn btn-success"><i class="bi bi-file-earmark-excel"></i> Exportar Excel</a>{% endif %}</div>
     </form>
     {% if data_inicio or data_fim %}{% if not filtro_valido %}<div class="text-danger small mt-3">Informe um período válido, com a data inicial menor ou igual à data final.</div>{% endif %}{% endif %}
-</div></div><div class="card shadow-sm mb-4"><div class="card-body"><div id="calendario"></div></div></div>
+</div></div>{% if request.GET.importados %}<div class="alert alert-success">Importação concluída: {{ request.GET.importados }} evento(s) criado(s).{% if request.GET.ignorados %} {{ request.GET.ignorados }} duplicado(s) ignorado(s).{% endif %}</div>{% endif %}<div class="card shadow-sm mb-4"><div class="card-body"><div id="calendario"></div></div></div>
 
 <div class="card shadow-sm"><div class="card-body">
     <h5 class="mb-3">Próximos eventos</h5>

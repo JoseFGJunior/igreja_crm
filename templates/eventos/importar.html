@@ -1,0 +1,53 @@
+{% extends 'base/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h4 class="mb-1">Importar eventos</h4><span class="text-muted">{{ igreja.nome }}</span></div>
+    <a href="{% url 'eventos_calendario' %}" class="btn btn-outline-secondary">Voltar</a>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5>Planilha de eventos</h5>
+        <p class="text-muted">Envie um arquivo .xlsx com as colunas EVENTO, HORA, DATA, DIRIGENTE e PREGADOR.</p>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary"><i class="bi bi-upload"></i> Ler planilha</button>
+        </form>
+    </div>
+</div>
+
+{% if linhas or erros %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5>Pré-visualização</h5>
+        {% if erros %}
+        <div class="alert alert-warning">
+            <strong>Linhas que não serão importadas:</strong>
+            <ul class="mb-0">{% for erro in erros %}<li>{{ erro }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+        {% if linhas %}
+        <p>{{ linhas|length }} evento(s) válido(s) encontrado(s).</p>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead><tr><th>Data</th><th>Horário</th><th>Evento</th><th>Local</th><th>Descrição</th></tr></thead>
+                <tbody>
+                {% for linha in linhas %}
+                    <tr><td>{{ linha.data|date:'d/m/Y' }}</td><td>{{ linha.hora_inicio|slice:':5' }}{% if linha.hora_fim %} às {{ linha.hora_fim|slice:':5' }}{% endif %}</td><td>{{ linha.titulo }}</td><td>{{ linha.local|default:'-' }}</td><td>{{ linha.descricao|linebreaksbr }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <form method="post" action="{% url 'evento_importar_confirmar' %}">
+            {% csrf_token %}
+            <button class="btn btn-success"><i class="bi bi-check-lg"></i> Confirmar importação</button>
+            <a href="{% url 'evento_importar' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+        {% else %}
+        <p class="text-muted mb-0">Nenhum evento válido para importar.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

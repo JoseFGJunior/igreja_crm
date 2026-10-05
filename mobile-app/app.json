@@ -1,0 +1,3 @@
+{
+  "expo": {"name":"PIB Cruz","slug":"pib-cruz","version":"0.1.0","orientation":"portrait","userInterfaceStyle":"light","scheme":"pibcruz","assetBundlePatterns":["**/*"],"ios":{"supportsTablet":true},"android":{"adaptiveIcon":{"backgroundColor":"#0B2F4A"}},"web":{"bundler":"metro"}}
+}

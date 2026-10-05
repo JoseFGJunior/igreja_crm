@@ -1,15 +1,19 @@
+from datetime import date
 from datetime import datetime, time
 from datetime import date
+import zipfile
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from apps.accounts.models import UsuarioIgreja
-from apps.eventos.forms import EventoForm
+from apps.eventos.forms import EventoForm, EventoImportForm
 from apps.eventos.models import Evento
 from apps.core.views import build_xlsx
+from apps.eventos.importacao import parse_eventos_xlsx
 
 
 def get_igreja_selecionada(request):
@@ -176,3 +180,44 @@ def evento_delete_view(request, pk):
         evento.delete()
         return redirect('eventos_calendario')
     return render(request, 'eventos/confirmar_exclusao.html', {'evento': evento, 'igreja': igreja})
+
+@login_required
+def evento_importar_view(request):
+    igreja = get_igreja_selecionada(request)
+    if igreja is None:
+        return redirect('dashboard')
+    form = EventoImportForm(request.POST or None, request.FILES or None)
+    context = {'form': form, 'igreja': igreja, 'linhas': [], 'erros': []}
+    if request.method == 'POST' and form.is_valid():
+        try:
+            linhas, erros = parse_eventos_xlsx(form.cleaned_data['arquivo'])
+        except (ValueError, zipfile.BadZipFile) as exc:
+            form.add_error('arquivo', str(exc))
+            return render(request, 'eventos/importar.html', context)
+        request.session['eventos_importacao'] = linhas
+        context.update({'linhas': linhas, 'erros': erros})
+        return render(request, 'eventos/importar.html', context)
+    return render(request, 'eventos/importar.html', context)
+
+
+@login_required
+def evento_importar_confirmar_view(request):
+    if request.method != 'POST':
+        return redirect('evento_importar')
+    igreja = get_igreja_selecionada(request)
+    if igreja is None:
+        return redirect('dashboard')
+    linhas = request.session.pop('eventos_importacao', [])
+    criados = 0
+    ignorados = 0
+    for linha in linhas:
+        inicio = time.fromisoformat(linha['hora_inicio'])
+        fim = time.fromisoformat(linha['hora_fim']) if linha.get('hora_fim') else None
+        data_evento = date.fromisoformat(linha['data'])
+        duplicado = Evento.objects.filter(igreja=igreja, titulo=linha['titulo'], local=linha.get('local', ''), data=data_evento, hora_inicio=inicio).exists()
+        if duplicado:
+            ignorados += 1
+            continue
+        Evento.objects.create(igreja=igreja, titulo=linha['titulo'], local=linha.get('local', ''), descricao=linha['descricao'], data=data_evento, hora_inicio=inicio, hora_fim=fim, categoria=Evento.CATEGORIA_OUTRO, exibir_site=True)
+        criados += 1
+    return redirect('%s?importados=%d&ignorados=%d' % (reverse('eventos_calendario'), criados, ignorados))

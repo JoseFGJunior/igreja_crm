@@ -28,3 +28,18 @@ class EventoForm(forms.ModelForm):
         if inicio and fim and fim < inicio:
             self.add_error('hora_fim', 'O horário final deve ser posterior ao horário inicial.')
         return cleaned_data
+
+class EventoImportForm(forms.Form):
+    arquivo = forms.FileField(
+        label='Planilha Excel',
+        help_text='Use um arquivo .xlsx com as colunas EVENTO, HORA, DATA, DIRIGENTE e PREGADOR.',
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': '.xlsx'}),
+    )
+
+    def clean_arquivo(self):
+        arquivo = self.cleaned_data['arquivo']
+        if not arquivo.name.lower().endswith('.xlsx'):
+            raise forms.ValidationError('Envie uma planilha Excel no formato .xlsx.')
+        if arquivo.size > 10 * 1024 * 1024:
+            raise forms.ValidationError('A planilha deve ter no máximo 10 MB.')
+        return arquivo
