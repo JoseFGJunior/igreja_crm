@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ConfiguracaoApp, MensagemApp, PalavraDoDia, PedidoOracao, PushSubscription
+from .models import AcessoApp, ConfiguracaoApp, MensagemApp, PalavraDoDia, PedidoOracao, PushSubscription
 
 @admin.register(ConfiguracaoApp)
 class ConfiguracaoAppAdmin(admin.ModelAdmin):
@@ -32,3 +32,10 @@ class MensagemAppAdmin(admin.ModelAdmin):
     date_hierarchy = 'data'
     list_editable = ('ativo',)
     fields = ('igreja', 'data', 'titulo', 'youtube_url', 'descricao', 'ativo')
+@admin.register(AcessoApp)
+class AcessoAppAdmin(admin.ModelAdmin):
+    list_display = ('igreja', 'evento', 'recurso', 'visitante_id', 'dispositivo', 'acessado_em')
+    list_filter = ('igreja', 'canal', 'evento', 'dispositivo', 'acessado_em')
+    search_fields = ('igreja__nome', 'visitante_id', 'recurso', 'evento')
+    date_hierarchy = 'acessado_em'
+    readonly_fields = ('igreja', 'visitante_id', 'usuario', 'canal', 'evento', 'recurso', 'dispositivo', 'user_agent', 'dados', 'acessado_em')

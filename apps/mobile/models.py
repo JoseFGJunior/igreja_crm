@@ -98,3 +98,26 @@ class MensagemApp(TenantModel):
 
     def __str__(self):
         return self.titulo
+class AcessoApp(TenantModel):
+    """Evento de uso do aplicativo por visitante anônimo ou usuário autenticado."""
+    CANAL_APP = 'app'
+    CANAL_PORTAL = 'portal'
+    CANAL_CHOICES = ((CANAL_APP, 'Aplicativo'), (CANAL_PORTAL, 'Portal'))
+    visitante_id = models.CharField(max_length=100, db_index=True)
+    usuario = models.ForeignKey('accounts.Usuario', on_delete=models.SET_NULL, blank=True, null=True, related_name='acessos_app')
+    canal = models.CharField(max_length=20, choices=CANAL_CHOICES, default=CANAL_APP)
+    evento = models.CharField(max_length=80, db_index=True)
+    recurso = models.CharField(max_length=120, blank=True)
+    dispositivo = models.CharField(max_length=40, blank=True)
+    user_agent = models.TextField(blank=True)
+    dados = models.JSONField(default=dict, blank=True)
+    acessado_em = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'Acesso do aplicativo'
+        verbose_name_plural = 'Acessos do aplicativo'
+        ordering = ('-acessado_em',)
+        indexes = [models.Index(fields=('igreja', 'evento', 'acessado_em')), models.Index(fields=('igreja', 'recurso', 'acessado_em'))]
+
+    def __str__(self):
+        return f'{self.igreja} · {self.recurso or self.evento} · {self.acessado_em:%d/%m/%Y %H:%M}'

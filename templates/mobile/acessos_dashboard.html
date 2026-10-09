@@ -1,0 +1,44 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">Acessos do aplicativo</h4>
+        <span class="text-muted">{{ igreja.nome }}</span>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3"><div class="card card-dashboard shadow-sm h-100"><div class="card-body"><h6>Total de acessos</h6><h2>{{ total_acessos }}</h2></div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="card card-dashboard shadow-sm h-100"><div class="card-body"><h6>Visitantes únicos</h6><h2 class="text-primary">{{ visitantes_unicos }}</h2></div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="card card-dashboard shadow-sm h-100"><div class="card-body"><h6>Acessos hoje</h6><h2 class="text-success">{{ acessos_hoje }}</h2></div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="card card-dashboard shadow-sm h-100"><div class="card-body"><h6>Eventos distintos</h6><h2 class="text-warning">{{ eventos_distintos }}</h2></div></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <h5 class="mb-3">Eventos mais utilizados</h5>
+            <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Evento</th><th class="text-end">Acessos</th></tr></thead>
+                <tbody>{% for item in eventos %}<tr><td>{{ item.evento }}</td><td class="text-end"><strong>{{ item.total }}</strong></td></tr>{% empty %}<tr><td colspan="2" class="text-center text-muted py-4">Nenhum acesso registrado.</td></tr>{% endfor %}</tbody>
+            </table></div>
+        </div></div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <h5 class="mb-3">Acessos recentes</h5>
+            <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Data</th><th>Evento</th><th>Recurso</th><th>Canal</th><th>Dispositivo</th></tr></thead>
+                <tbody>{% for acesso in acessos|slice:':20' %}<tr>
+                    <td>{{ acesso.acessado_em|date:'d/m/Y H:i' }}</td>
+                    <td>{{ acesso.evento }}</td>
+                    <td>{{ acesso.recurso|default:'-' }}</td>
+                    <td>{{ acesso.get_canal_display }}</td>
+                    <td>{{ acesso.dispositivo|default:'-' }}</td>
+                </tr>{% empty %}<tr><td colspan="5" class="text-center text-muted py-4">Nenhum acesso registrado.</td></tr>{% endfor %}</tbody>
+            </table></div>
+        </div></div>
+    </div>
+</div>
+{% endblock %}

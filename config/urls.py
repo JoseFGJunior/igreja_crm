@@ -44,6 +44,11 @@ urlpatterns = [
         include('apps.mobile.urls')
     ),
 
+    path(
+        'mensagens/',
+        include('apps.mobile.dashboard_urls')
+    ),
+
     path('<slug:slug>/', include('apps.portal.urls')),
 
 ]

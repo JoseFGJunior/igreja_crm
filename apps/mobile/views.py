@@ -2,14 +2,70 @@ from functools import wraps
 import json
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
+from django.db.models import Count
+
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from apps.eventos.models import Evento
 from apps.portal.models import AvisoIgreja, ConfiguracaoSiteIgreja
-from .models import ConfiguracaoApp, MensagemApp, PalavraDoDia, PedidoOracao, PushSubscription
+
+from apps.accounts.models import UsuarioIgreja
+from .models import AcessoApp, ConfiguracaoApp, MensagemApp, PalavraDoDia, PedidoOracao, PushSubscription
 from .pix import pix_payload
 PUBLIC_STATUSES = (PalavraDoDia.STATUS_APROVADO, PalavraDoDia.STATUS_PUBLICADO)
+
+def get_igreja_selecionada(request):
+    igreja_id = request.session.get('igreja_id')
+    if not igreja_id:
+        return None
+    relacao = UsuarioIgreja.objects.select_related('igreja').filter(
+        usuario=request.user,
+        igreja_id=igreja_id,
+        ativo=True,
+        igreja__ativa=True,
+    ).first()
+    return relacao.igreja if relacao else None
+
+
+@login_required
+@permission_required('mobile.view_mensagemapp', raise_exception=True)
+def mensagem_dashboard_view(request):
+    igreja = get_igreja_selecionada(request)
+    if igreja is None:
+        return redirect('dashboard')
+    hoje = timezone.localdate()
+    mensagens = MensagemApp.objects.filter(igreja=igreja)
+    return render(request, 'mobile/mensagem_dashboard.html', {
+        'igreja': igreja,
+        'mensagens': mensagens.order_by('-data', 'ordem', '-created_at'),
+        'total_mensagens': mensagens.count(),
+        'mensagens_ativas': mensagens.filter(ativo=True).count(),
+        'mensagens_publicadas': mensagens.filter(ativo=True, data__lte=hoje).count(),
+        'proximas_mensagens': mensagens.filter(ativo=True, data__gt=hoje).count(),
+    })
+
+@login_required
+@permission_required('mobile.view_acessoapp', raise_exception=True)
+def acesso_dashboard_view(request):
+    igreja = get_igreja_selecionada(request)
+    if igreja is None:
+        return redirect('dashboard')
+    hoje = timezone.localdate()
+    acessos = AcessoApp.objects.filter(igreja=igreja)
+    eventos = acessos.values('evento').annotate(total=Count('id')).order_by('-total', 'evento')[:10]
+    return render(request, 'mobile/acessos_dashboard.html', {
+        'igreja': igreja,
+        'acessos': acessos.select_related('usuario').order_by('-acessado_em', '-id')[:100],
+        'eventos': eventos,
+        'total_acessos': acessos.count(),
+        'visitantes_unicos': acessos.values('visitante_id').distinct().count(),
+        'acessos_hoje': acessos.filter(acessado_em__date=hoje).count(),
+        'eventos_distintos': acessos.values('evento').distinct().count(),
+    })
+
 
 def cors_api(view):
     @wraps(view)
@@ -33,6 +89,28 @@ def _configuracao_ativa(tenant=None):
     tenant = str(tenant or '').strip()
     return queryset.filter(igreja__slug__iexact=tenant).first() if tenant else queryset.first()
 
+@cors_api
+@csrf_exempt
+def registrar_acesso(request):
+    if request.method != 'POST':
+        return JsonResponse({'detail': 'Método não permitido.'}, status=405)
+    try:
+        payload = json.loads(request.body or '{}')
+    except json.JSONDecodeError:
+        return JsonResponse({'detail': 'JSON inválido.'}, status=400)
+    config = _configuracao_ativa(payload.get('tenant'))
+    visitante_id = str(payload.get('visitante_id') or '').strip()
+    evento = str(payload.get('evento') or '').strip()
+    recurso = str(payload.get('recurso') or '').strip()
+    if not config:
+        return JsonResponse({'detail': 'Nenhuma igreja habilitada para o aplicativo.'}, status=404)
+    if not visitante_id or not evento:
+        return JsonResponse({'detail': 'visitante_id e evento são obrigatórios.'}, status=400)
+    if len(visitante_id) > 100 or len(evento) > 80 or len(recurso) > 120:
+        return JsonResponse({'detail': 'Dados do evento excedem o limite permitido.'}, status=400)
+    dados = payload.get('dados') if isinstance(payload.get('dados'), dict) else {}
+    AcessoApp.objects.create(igreja=config.igreja, visitante_id=visitante_id, canal=AcessoApp.CANAL_APP, evento=evento, recurso=recurso, dispositivo=str(payload.get('dispositivo') or '')[:40], user_agent=request.headers.get('User-Agent', ''), dados=dados)
+    return JsonResponse({'detail': 'Acesso registrado.'}, status=201)
 def _palavra_data(request, palavra):
     return {'id': palavra.id, 'igreja_id': palavra.igreja_id, 'data': palavra.data.isoformat(), 'titulo': palavra.titulo, 'referencia_biblica': palavra.referencia_biblica, 'texto_biblico': palavra.texto_biblico, 'reflexao': palavra.reflexao, 'aplicacao': palavra.aplicacao, 'oracao': palavra.oracao, 'imagem': _media_url(request, palavra.imagem)}
 
